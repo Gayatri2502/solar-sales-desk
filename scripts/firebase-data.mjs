@@ -1,0 +1,2 @@
+import {build} from 'esbuild';
+try{const result=await build({entryPoints:['server/firebase/data-cli.ts'],bundle:true,platform:'node',format:'esm',write:false});const module=await import('data:text/javascript;base64,'+Buffer.from(result.outputFiles[0].text).toString('base64'));await module.run();}catch{console.error('Backup/restore failed. Check local credential/project, file scope and maintenance requirements. Do not retry a restore until checking its committed state.');process.exitCode=1;}

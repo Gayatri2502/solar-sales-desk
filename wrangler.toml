@@ -1,0 +1,16 @@
+name = "solar-sales-desk-api"
+main = "server/worker.ts"
+compatibility_date = "2026-10-01"
+[vars]
+ALLOWED_ORIGIN = "http://localhost:5173"
+AI_PROVIDER = "mock"
+AI_ENABLED = "false"
+AI_MODEL = "gpt-5.4-nano"
+AI_INPUT_USD_PER_M = "0.20"
+AI_OUTPUT_USD_PER_M = "1.25"
+APP_SPEND_CEILING_USD = "5"
+USER_DAILY_AI_LIMIT = "20"
+TENANT_DAILY_AI_LIMIT = "100"
+# Approval triggers delivery immediately; cron recovers pending/retryable work.
+[triggers]
+crons = ["*/5 * * * *"]

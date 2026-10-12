@@ -1,0 +1,2 @@
+sku,brand,category,name,attributes,unit,cost_price,selling_price,stock,tax_percent,active
+DEMO-P-540,Sunfield Demo,Panel,540 W panel,"Synthetic rated power: 540 W",pcs,8900.00,10400.00,20,,true

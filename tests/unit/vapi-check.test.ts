@@ -1,0 +1,5 @@
+import {it,expect,vi} from 'vitest';
+// @ts-expect-error Standalone operator script uses plain JavaScript.
+import {inspectVapi} from '../../scripts/vapi-check.mjs';
+it('Vapi inspection makes only GET requests and strips tokens, prompts and full telephone numbers',async()=>{const id='11111111-1111-4111-8111-111111111111',fetcher=vi.fn(async(url:string)=>new Response(JSON.stringify(url.includes('/assistant')?[{id,name:'Sales',model:{messages:[{content:'private prompt'}]}}]:[{id,number:'+919999999999',provider:'twilio',twilioAuthToken:'private-secret'}])));const r=await inspectVapi('private-test-key',fetcher);expect(fetcher).toHaveBeenCalledTimes(2);for(const args of fetcher.mock.calls)expect((args as unknown as [string,RequestInit])[1].method).toBe('GET');expect(JSON.stringify(r)).not.toMatch(/private-secret|private prompt|919999999999|private-test-key/);expect(r.phoneNumbers[0].numberSuffix).toBe('9999');});
+it('missing credentials never trigger a provider request',async()=>{const fetcher=vi.fn();await expect(inspectVapi('',fetcher)).rejects.toThrow(/first/);expect(fetcher).not.toHaveBeenCalled();});

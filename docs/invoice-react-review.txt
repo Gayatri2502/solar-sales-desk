@@ -1,0 +1,104 @@
+No feature branch or uncommitted changes detected. Running full scan.
+
+  
+[react-doctor] Score API unreachable (fetch failed)
+Agent guidance
+  - Treat React Doctor diagnostics as starting hypotheses. Read the relevant code before confirming or suppressing each finding.
+  - For each group, decide true positive, false positive, or needs-human-review, then assign high/medium/low confidence.
+  - Do not suppress a finding without evidence from the file in question. Confidence requires code context.
+  - Understand the root cause before editing. Fix the underlying code instead of changing react-doctor config or suppressing rules unless explicitly asked.
+  - Investigate deeply where relevant: race conditions, security-sensitive flows, state propagation, multi-file refactors, and downstream dependency chains.
+  - Ignore pure style preferences, theoretical issues without real impact, missing features, and unrelated pre-existing code.
+  - Start with high-confidence fixes that preserve behavior. Leave low-confidence or product-dependent changes as notes.
+  - Run `npx react-doctor@latest --verbose --scope changed` before and after changes, plus relevant tests after each focused batch.
+  - When available, spawn subagents or isolated worktrees for independent rule families, then review and merge only the best safe fixes.
+  - Split unrelated, broad, or behavior-changing work into separate PRs/branches instead of one large cleanup.
+  - When one rule spans dozens of files (a migration-scale change), fix a representative sample first, confirm the recipe holds, and get the code owner's sign-off before changing the rest. Don't mass-fix a broad pattern in one unreviewed pass.
+  - For confirmed issues that cannot be fixed now, create GitHub issues with the rule, file/line, confidence, impact, and proposed fix.
+  - If a fix needs an API, UX, or architecture decision, stop and ask before editing.
+
+✔ Scanned 49 files in 681ms
+
+React Doctor — solar-sales-desk
+Score unavailable (could not reach the score API). Want something custom to your company? Contact us at https://react.doctor/enterprise.
+
+38 issues
+Performance: 8 warnings
+Maintainability: 14 warnings
+Bugs: 16 warnings
+
+⚠ await inside a loop ×2
+  react-doctor/async-await-in-loop
+  server/worker.ts:117
+  src/components/NewEnquiry.tsx:112
+⚠ React function has high control-flow complexity ×6
+  react-doctor/no-high-complexity-react-function
+  src/App.tsx:102
+  src/components/AdminReports.tsx:16
+  src/components/BusinessSettings.tsx:61
+  src/components/Invoices.tsx:7
+  src/components/Leads.tsx:180
+  src/components/QuoteDetail.tsx:61
+⚠ Large component is hard to read and change ×5
+  react-doctor/no-giant-component
+  src/App.tsx:102
+  src/components/AdminReports.tsx:16
+  src/components/BusinessSettings.tsx:61
+  src/components/Leads.tsx:180
+  src/components/QuoteDetail.tsx:61
+⚠ Prop derived into useState ×8
+  react-doctor/no-derived-useState
+  src/components/BusinessSettings.tsx:72
+  src/components/Leads.tsx:189
+  src/components/Leads.tsx:190
+  src/components/Leads.tsx:191
+  src/components/QuoteDetail.tsx:76
+  src/components/QuoteDetail.tsx:81
+  src/components/QuoteDetail.tsx:82
+  src/components/QuoteDetail.tsx:83
+⚠ State initializer runs on every render ×4
+  react-doctor/rerender-lazy-state-init
+  src/components/Dashboard.tsx:79
+  src/components/Dashboard.tsx:82
+  src/components/EnquiryDetail.tsx:74
+  src/components/EnquiryDetail.tsx:76
+⚠ Array index used as a key ×8
+  react-doctor/no-array-index-as-key
+  src/components/Dashboard.tsx:347
+  src/components/EnquiryDetail.tsx:118
+  src/components/Importer.tsx:122
+  src/components/Leads.tsx:375
+  src/components/NewEnquiry.tsx:225
+  src/components/QuoteDetail.tsx:127
+  src/components/QuoteDetail.tsx:514
+  src/components/ui/field.tsx:215
+⚠ Non-component export in component file ×3
+  react-doctor/only-export-components
+  src/components/shared.tsx:122
+  src/components/ui/badge.tsx:47
+  src/components/ui/button.tsx:67
+⚠ Array lookup inside a loop
+  react-doctor/js-set-map-lookups
+  src/csv.ts:37
+⚠ Intl formatter rebuilt each call
+  react-doctor/js-hoist-intl
+  src/domain.ts:1236
+  Full diagnostics written to /var/folders/5b/bb33p3611nvg3jg9p351k_bh0000gn/T/react-doctor-7a7982d5-7ef5-4f3d-abd5-8493e3a04dbd
+
+  ────────────────────────────────────────────────────────────
+
+  Docs: https://react.doctor/docs
+  Learn more about fixing issues, setting up CI/CD, and
+  configuring rules with a config file
+
+  GitHub: https://github.com/millionco/react-doctor
+  Report issues and star the repository!
+
+[react-doctor] Score API unreachable (fetch failed)
+
+React Doctor is not installed in this project.
+Ask the user if they would like to set it up, then run:
+
+  npx react-doctor install --yes
+
+This adds agent skill files, a `doctor` package script, and react-doctor as a dev dependency.

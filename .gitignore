@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env*
+!.env.example
+.dev.vars
+.wrangler/
+test-results/
+playwright-report/
+
+.firebase-service-account.json
+
+backups/
+*.bundle
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
