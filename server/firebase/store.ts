@@ -228,12 +228,12 @@ export class FirebaseStore {
       throw Error("Business membership changed.");
     return { state: visibleState(s.value, current.role), role: current.role };
   }
-  async audit(id: string, tenant: string, type: string, entity: string) {
+  async audit(id: string, tenant: string, type: string, entity: string, requiredRole?: Member["role"]) {
     for (let attempt = 0; attempt < 4; attempt++) {
       const m = await this.get<Member>("members/" + id),
         s = await this.get<State>("businesses/" + tenant);
-      if (!m || m.value.tenant !== tenant || !s)
-        throw Error("Business membership required.");
+      if (!m || m.value.tenant !== tenant || !s || (requiredRole && m.value.role !== requiredRole))
+        throw Error("Required business membership role unavailable.");
       const next = structuredClone(s.value);
       next.events.push({
         at: new Date().toISOString(),

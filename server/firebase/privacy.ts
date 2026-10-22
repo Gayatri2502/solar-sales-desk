@@ -60,15 +60,10 @@ export async function purgeTenant(store: FirebaseStore, tenant: string) {
   if (marker)
     await store.call(store.root + "/documents:commit", {
       writes: [
-        store.write(
-          "system/delete-" + tenant,
-          {
-            ...marker.value,
-            status: "complete",
-            completedAt: new Date().toISOString(),
-          },
-          marker.stamp,
-        ),
+        {
+          delete: store.name("system/delete-" + tenant),
+          currentDocument: { updateTime: marker.stamp },
+        },
       ],
     });
   return true;
@@ -162,7 +157,7 @@ export async function firebaseExport(store: FirebaseStore, ctx: Member) {
     throw Error("Operator-assisted export required for this history size.");
   for (const d of docs)
     rows.push(...(JSON.parse(d.fields.json.stringValue).rows || []));
-  await store.audit(ctx.id, ctx.tenant, "business.export", ctx.tenant);
+  await store.audit(ctx.id, ctx.tenant, "business.export", ctx.tenant, "admin");
   return {
     version: 1,
     exportedAt: new Date().toISOString(),
@@ -177,6 +172,10 @@ export async function finishPendingDeletions(store: FirebaseStore) {
     const v = JSON.parse(d.fields.json.stringValue);
     if (v.status === "pending")
       await purgeTenant(store, v.tenant).catch(() => false);
+    else if (v.status === "complete")
+      await store.call(store.root + "/documents:commit", {
+        writes: [{ delete: d.name, currentDocument: { updateTime: d.updateTime } }],
+      }).catch(() => undefined);
   }
 }
 

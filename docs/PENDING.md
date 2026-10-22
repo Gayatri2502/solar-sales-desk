@@ -25,3 +25,8 @@
 ## Implementation checks completed
 
 Firebase routes, callback bridge, cron dispatcher, approved invoice send, AI ledger/deduplication, timezone reports, user administration, private export/deletion and backup/restore commands are implemented. Local test/build evidence is documented separately; it is not a substitute for the hosted checks above. Initial calling/WhatsApp provisioning remains one account bound to one pilot business. Larger workloads require normalized/paginated storage before the 750 KB aggregate guard or free quotas are reached.
+
+
+## Latest local progress — 23 October 2026
+
+Export rechecks current admin membership at its audit transaction. Completed deletion queue markers are removed so later pending purges can progress. Restore validates all ledger scopes before committing the snapshot and ledgers atomically. Regression coverage now totals 78 passing tests. Hosted integration checks still require the credentials listed above. Browser verification is additionally blocked while local browser use is disabled in Work settings.

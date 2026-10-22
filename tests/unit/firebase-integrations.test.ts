@@ -6,7 +6,7 @@ import {
   finishExtraction,
   usageRows,
 } from "../../server/firebase/ai";
-import { firebaseDelete, firebaseExport } from "../../server/firebase/privacy";
+import { firebaseDelete, firebaseExport, finishPendingDeletions } from "../../server/firebase/privacy";
 import { reduce, mockExtract } from "../../src/domain";
 import {
   runJob,
@@ -253,3 +253,61 @@ it("report usage counts the configured India day across a UTC month boundary", a
 
 import {prepareFirebaseRestore} from '../../server/firebase/restore';
 it('restore preserves existing membership grants and quarantines pending calls/invoices instead of replaying them',()=>{const {docs}=firebaseFixture(),current=docs.get('/businesses/'+tenant)!.value;const source=structuredClone(current);source.users=[{id:'outsider',role:'admin',name:'Injected'}];source.communicationPolicy={autoCalls:true,monthlyCeiling:100,userDaily:1,tenantDaily:1};source.communicationJobs=[{status:'Queued'},{status:'Accepted'}];source.leads=[{status:'Scheduled',scheduledAt:'future',callConsent:'old consent'}];source.invoices=[{status:'Sending',attempts:1,lease:'old'}];const restored=prepareFirebaseRestore(source,current);expect(restored.users).toEqual(current.users);expect(restored.communicationPolicy?.autoCalls).toBe(false);expect(restored.communicationJobs?.map(j=>j.status)).toEqual(['Cancelled','Uncertain']);expect(restored.invoices?.[0].attempts).toBe(3);expect(restored.leads?.[0].callConsent).toBe('');});
+
+
+it("export rechecks the current admin role before releasing private costs", async () => {
+  const {store,ctx,docs}=firebaseFixture();
+  docs.set('/members/admin',{value:{...ctx,role:'sales'},stamp:'2'});
+  await expect(firebaseExport(store,ctx)).rejects.toThrow(/role/);
+});
+
+it("completed deletion markers cannot permanently starve pending private-data purges", async () => {
+  const {store,docs}=firebaseFixture();
+  for(let n=0;n<12;n++)docs.set('/system/delete-complete-'+n,{value:{status:'complete'},stamp:'1'});
+  docs.set('/system/delete-'+tenant,{value:{status:'pending',tenant},stamp:'1'});
+  docs.set('/system/ai-'+tenant+'-retained',{value:{result:'private'},stamp:'1'});
+  await finishPendingDeletions(store);
+  await finishPendingDeletions(store);
+  expect(docs.has('/system/ai-'+tenant+'-retained')).toBe(false);
+  expect(docs.has('/system/delete-'+tenant)).toBe(false);
+});
+
+
+it("restore validates every ledger scope and duplicate before building a transaction", async () => {
+ const {validateRestoreLedgers}=await import('../../server/firebase/restore');
+ const valid={path:'system/usage-'+tenant+'-2026-10',value:{rows:[]}};
+ expect(validateRestoreLedgers([valid],tenant)).toEqual([valid]);
+ expect(()=>validateRestoreLedgers([valid,{...valid,path:'system/usage-other-2026-10'}],tenant)).toThrow(/scope/);
+ expect(()=>validateRestoreLedgers([valid,valid],tenant)).toThrow(/duplicate/);
+ expect(()=>validateRestoreLedgers([{...valid,path:'system/usage-'+tenant+'-2026-13'}],tenant)).toThrow(/scope/);
+ expect(()=>validateRestoreLedgers([{...valid,value:{rows:'invalid'}}],tenant)).toThrow();
+});
+
+
+it("a competing ledger update aborts the complete restore without changing business data", async () => {
+ const {store,docs}=firebaseFixture();
+ const {restoreFirebaseSnapshot}=await import('../../server/firebase/restore');
+ const path='system/usage-'+tenant+'-2026-10';
+ docs.set('/'+path,{value:{rows:[]},stamp:'1'});
+ const before=structuredClone(docs.get('/businesses/'+tenant)!);
+ const source=structuredClone(before.value);source.settings.name='Restored name';
+ const original=store.call.bind(store);
+ vi.spyOn(store,'call').mockImplementation(async (url,body) => {
+  if(url.endsWith('/documents:commit'))docs.set('/'+path,{value:{rows:[{request:'competing'}]},stamp:'changed'});
+  return original(url,body);
+ });
+ await expect(restoreFirebaseSnapshot(store,tenant,source,[{path,value:{rows:[]}}])).rejects.toThrow();
+ expect(docs.get('/businesses/'+tenant)).toEqual(before);
+ expect(docs.get('/'+path)!.value.rows).toHaveLength(1);
+});
+
+it("a valid restore atomically restores the snapshot and usage ledger with outbound automation disabled", async () => {
+ const {store,docs}=firebaseFixture();
+ const {restoreFirebaseSnapshot}=await import('../../server/firebase/restore');
+ const source=structuredClone(docs.get('/businesses/'+tenant)!.value);
+ const path='system/usage-'+tenant+'-2026-10';
+ await restoreFirebaseSnapshot(store,tenant,source,[{path,value:{rows:[{request:'saved'}]}}]);
+ expect(docs.get('/'+path)!.value.rows).toEqual([{request:'saved'}]);
+ expect(docs.get('/businesses/'+tenant)!.value.communicationPolicy.autoCalls).toBe(false);
+ expect(docs.get('/businesses/'+tenant)!.value.events.at(-1).type).toBe('business.restore');
+});

@@ -2,7 +2,7 @@ import {readFile,writeFile,mkdir,chmod} from 'node:fs/promises';
 import {z} from 'zod';
 import {FirebaseStore} from './store';
 import {privateDocuments} from './privacy';
-import {prepareFirebaseRestore} from './restore';
+import {restoreFirebaseSnapshot} from './restore';
 import {type State} from '../../src/domain';
 export async function run(){const [action,argument,destination,confirmation]=process.argv.slice(2);
  const account=JSON.parse(await readFile('.firebase-service-account.json','utf8')),aliases=JSON.parse(await readFile('.firebaserc','utf8')),config=JSON.parse(await readFile('firebase.json','utf8'));
@@ -17,9 +17,8 @@ export async function run(){const [action,argument,destination,confirmation]=pro
  if(action==='restore'){
   if(destination!=='--confirm-restore'||confirmation!==undefined)throw Error('Restore requires: restore BACKUP_FILE --confirm-restore, with Worker maintenance enabled.');
   const local=await readFile('.dev.vars','utf8');if(!/^MAINTENANCE_MODE=["']?true["']?\s*$/m.test(local))throw Error('Set MAINTENANCE_MODE=true locally and on the Worker before restoring.');
-  const backup=JSON.parse(await readFile(argument,'utf8'));if(backup.project!==account.project_id||backup.database!==config.firestore.database)throw Error('Backup project/database mismatch.');const tenant=z.uuid().parse(backup.tenant),current=await store.get<State>('businesses/'+tenant);if(!current)throw Error('Target business must exist with verified memberships.');const state=prepareFirebaseRestore(backup.state,current.value);
-  await store.call(store.root+'/documents:commit',{writes:[store.write('businesses/'+tenant,state,current.stamp)]});
-  for(const ledger of backup.ledgers||[]){if(typeof ledger.path!=='string'||!ledger.path.startsWith('system/usage-'+tenant+'-'))throw Error('Invalid tenant ledger scope.');const old=await store.get<any>(ledger.path);await store.call(store.root+'/documents:commit',{writes:[store.write(ledger.path,ledger.value,old?.stamp)]});}
+  const backup=JSON.parse(await readFile(argument,'utf8'));if(backup.project!==account.project_id||backup.database!==config.firestore.database)throw Error('Backup project/database mismatch.');const tenant=z.uuid().parse(backup.tenant);
+  await restoreFirebaseSnapshot(store,tenant,backup.state,backup.ledgers);
   console.log('Business snapshot restored. Keep maintenance enabled until ledger/budget, provider outcome and physical-stock reconciliation are complete. Auth membership grants were preserved; outbound jobs were quarantined.');return;
  }throw Error('Usage: backup TENANT_UUID [OUTPUT_FILE] | restore BACKUP_FILE --confirm-restore');
 }

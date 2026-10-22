@@ -66,3 +66,10 @@ Firebase core integration, 12 October 2026: 67 automated tests passed, including
 Firebase integration completion pass: 73 tests passed, including concurrent AI deduplication, cached-schema validation, allowance exhaustion, signed WhatsApp opt-out and callback replay, one outbound claim under concurrent dispatch, admin-bound/idempotent invoice reservations, timezone month-boundary reporting, tenant-scoped deletion and restore quarantine. Production build passed. Firebase rules/index deployment succeeded (job 1791830753402); billing remains disabled. Live provider/database transactions and restoration remain pending the account configuration in PENDING.md.
 
 13 October 2026 release checkpoint: final Cloudflare Worker dry bundle passed (1,700.98 KiB, 310.45 KiB gzip). The live-configuration check correctly failed for missing activation configuration; frontend and outbound integrations remain disabled. Source and README were pushed to the private GitHub repository, and the remote main commit was verified against local HEAD. An additional local Git recovery bundle was saved outside the application repository. No public deployment, purchase or customer communication was performed.
+
+
+## Recovery and export hardening — 23 October 2026
+
+78 tests passed. Added regression coverage for a stale admin context attempting private export, completed deletion markers blocking pending purges, invalid/cross-tenant/duplicate restore ledgers, competing ledger updates aborting the entire restore, and successful atomic snapshot-plus-ledger restoration with auto-calls disabled. Firebase cases use the local REST transaction fixture, not a hosted database. Production build passed. Existing SQL isolation, approval and quota checks passed during this continuation.
+
+Browser verification could not continue because local browser use is disabled in Work settings. Mobile, keyboard and print checks on this release remain open. Firebase server credentials and live frontend configuration were still absent at the configuration inspection; calling-number/webhook/tenant bindings were empty. No live messages, calls, deployment or billing activation occurred.
