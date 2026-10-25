@@ -267,6 +267,14 @@ main {
   border: 1px solid var(--border);
   margin-bottom: 24px;
 }
+.dashboard-actions { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; margin: 0 0 18px; }
+.dashboard-actions-admin { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dashboard-action-card { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 18px; padding: 15px 18px; border: 1px solid var(--border); border-radius: 11px; background: #fff; box-shadow: var(--surface-shadow); }
+.dashboard-action-card .eyebrow { color: #65766a; font-size: 10px; font-weight: 700; letter-spacing: .8px; }
+.dashboard-action-card h2 { margin: 4px 0; font-size: 15px; }
+.dashboard-action-card p { margin: 0; color: var(--muted-foreground); font-size: 12px; line-height: 1.45; }
+.dashboard-action-card > div { min-width: 0; }
+.dashboard-report-action { background: #f8faf7; }
 .stats button {
   text-align: left;
   padding: 22px;
@@ -1069,6 +1077,13 @@ input:focus, select:focus, textarea:focus { border-color: #17634b; box-shadow: 0
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 .lead-overview { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 24px; align-items: center; padding: 18px 22px; }
+.lead-table-heading { align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.lead-table-heading h2 { margin: 0 0 3px; }
+.lead-table-heading p { margin: 0; font-size: 12px; }
+.lead-table-filters { display: flex; align-items: center; gap: 8px; min-width: min(100%, 480px); }
+.lead-table-filters select { min-width: 150px; min-height: 38px; }
+.lead-search { flex: 1; min-width: 180px; }
+.lead-search input { min-width: 0; min-height: 38px; }
 .lead-overview h2 { margin: 0 0 2px; }
 .lead-overview p { margin: 0; }
 .lead-kpis { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -1094,5 +1109,5 @@ input:focus, select:focus, textarea:focus { border-color: #17634b; box-shadow: 0
 .solar-profile-summary > div { padding: 9px 11px; border: 1px solid #e4eae2; border-radius: 8px; background: #f8faf7; min-width: 0; }
 .solar-profile-summary dt { color: #627166; font-size: 10px; font-weight: 650; text-transform: uppercase; letter-spacing: .45px; }
 .solar-profile-summary dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 13px; }
-@media (max-width: 900px) { .lead-overview { grid-template-columns: 1fr; } .lead-kpis { grid-row: auto; } .solar-profile-summary { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-@media (max-width: 520px) { .lead-overview { padding: 15px; } .lead-kpis { gap: 6px; } .lead-kpis span { padding: 7px 8px; white-space: normal; } .lead-capture > summary, .lead-analytics > summary { padding: 14px 15px; } .lead-capture > summary { align-items: flex-start; flex-wrap: wrap; } .lead-capture > summary small { order: 2; flex-basis: 100%; } .lead-capture form { padding: 15px; } .solar-profile-summary { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 900px) { .lead-overview { grid-template-columns: 1fr; } .lead-kpis { grid-row: auto; } .solar-profile-summary { grid-template-columns: repeat(2, minmax(0,1fr)); } .dashboard-actions-admin { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .lead-overview { padding: 15px; } .lead-kpis { gap: 6px; } .lead-kpis span { padding: 7px 8px; white-space: normal; } .lead-capture > summary, .lead-analytics > summary { padding: 14px 15px; } .lead-capture > summary { align-items: flex-start; flex-wrap: wrap; } .lead-capture > summary small { order: 2; flex-basis: 100%; } .lead-capture form { padding: 15px; } .solar-profile-summary { grid-template-columns: 1fr 1fr; } .dashboard-action-card { align-items: flex-start; flex-direction: column; } .lead-table-filters { align-items: stretch; flex-direction: column; min-width: 100%; } .lead-table-filters select { width: 100%; } .lead-search { width: 100%; } }

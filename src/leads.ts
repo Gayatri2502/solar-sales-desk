@@ -57,6 +57,20 @@ export const phoneSchema = z
     /^\+[1-9]\d{7,14}$/,
     "Use international format, for example +91 followed by the number.",
   );
+
+/** Normalize common input formatting for the India pilot before validating E.164. */
+export function normalizeWhatsAppNumber(value: string): string {
+  const compact = value.trim().replace(/[\s().-]/g, "");
+  if (/^\d{10}$/.test(compact)) return `+91${compact}`;
+  if (/^91\d{10}$/.test(compact)) return `+${compact}`;
+  return compact;
+}
+
+const whatsappSchema = z
+  .string()
+  .transform(normalizeWhatsAppNumber)
+  .pipe(z.union([phoneSchema, z.literal("")]));
+
 export const leadInput = z.object({
   customerId: z.string().min(1),
   source: z.enum([
@@ -71,7 +85,7 @@ export const leadInput = z.object({
     "Other",
   ]),
   sourceReference: z.string().max(200).default(""),
-  whatsapp: z.union([phoneSchema, z.literal("")]),
+  whatsapp: whatsappSchema,
   whatsappConsent: z.string().max(1000).default(""),
   notes: z.string().max(2000).default(""),
   solarProfile: solarProfileSchema.optional(),

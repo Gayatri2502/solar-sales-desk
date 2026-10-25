@@ -64,6 +64,8 @@ export default function Dashboard({
   drafts,
   value,
   won,
+  admin,
+  callingConfigured,
   onEnquiry,
   onPage,
 }: {
@@ -72,6 +74,8 @@ export default function Dashboard({
   drafts: Quote[];
   value: number;
   won: State["orders"];
+  admin: boolean;
+  callingConfigured: boolean;
   onEnquiry: (id: string) => void;
   onPage: (s: string) => void;
 }) {
@@ -136,6 +140,12 @@ export default function Dashboard({
         })
         .map((l) => `${q.number}: ${l.sku}`),
     );
+  const callsDue = (state.leads || []).filter(
+    (lead) =>
+      lead.status === "Scheduled" &&
+      lead.callConsent &&
+      Date.parse(lead.scheduledAt) <= Date.now(),
+  ).length;
   return (
     <>
       <div className="stats">
@@ -173,6 +183,24 @@ export default function Dashboard({
           </small>
         </button>
       </div>
+      <section className={`dashboard-actions${admin ? " dashboard-actions-admin" : ""}`} aria-label="Priority actions">
+        <div className="dashboard-action-card">
+          <div>
+            <span className="eyebrow">CALL QUEUE</span>
+            <h2>{callsDue} agreed {callsDue === 1 ? "call" : "calls"} due</h2>
+            <p>{callingConfigured ? "Calls need recorded consent, an agreed time, provider access and available allowance." : "Calls are disabled until a calling provider is connected and verified."}</p>
+          </div>
+          <Button variant="outline" onClick={() => onPage("Leads & Calls")}>Review calls</Button>
+        </div>
+        {admin ? <div className="dashboard-action-card dashboard-report-action">
+          <div>
+            <span className="eyebrow">ADMIN REPORTS</span>
+            <h2>Sales, call quality and spend</h2>
+            <p>Review enquiry conversion, won order value, margins, call outcomes and recorded costs.</p>
+          </div>
+          <Button onClick={() => onPage("Reports")}>Open reports</Button>
+        </div> : null}
+      </section>
       <div className="dashboard-grid">
         <section className="panel">
           <div className="section-heading">

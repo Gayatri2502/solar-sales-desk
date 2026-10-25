@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { reduce, mockExtract, match } from "../../src/domain";
 import { seed } from "../../src/seed";
-import { scheduledInstant } from "../../src/leads";
+import { leadInput, scheduledInstant } from "../../src/leads";
 const actor = { id: "demo-sales", role: "sales" as const };
 const now = "2026-10-05T05:00:00.000Z";
 const due = "2026-10-05T05:01:00.000Z";
@@ -53,6 +53,16 @@ function scheduled() {
   );
 }
 describe("lead qualification and call queue", () => {
+  it("normalizes common WhatsApp number formats for the India pilot", () => {
+    const base = {
+      customerId: "customer-1",
+      source: "Manual" as const,
+    };
+    expect(leadInput.parse({ ...base, whatsapp: "98765 43210" }).whatsapp).toBe("+919876543210");
+    expect(leadInput.parse({ ...base, whatsapp: "+91 (98765)-43210" }).whatsapp).toBe("+919876543210");
+    expect(leadInput.parse({ ...base, whatsapp: "919876543210" }).whatsapp).toBe("+919876543210");
+    expect(() => leadInput.parse({ ...base, whatsapp: "987654321" })).toThrow();
+  });
   it("deduplicates source records and open customer leads", () => {
     const s = captured();
     expect(() =>
@@ -89,6 +99,18 @@ describe("lead qualification and call queue", () => {
         now,
       ),
     ).toThrow("permission");
+    s = reduce(s, {
+      type: "lead.whatsapp-permission",
+      id: s.leads![0].id,
+      evidence: "Customer opted in by email on 25 October 2026",
+    }, actor, now);
+    expect(s.leads![0].whatsappConsent).toContain("opted in");
+    expect(() => reduce(s, {
+      type: "lead.qualify",
+      id: s.leads![0].id,
+      response: "Awaiting reply",
+      evidence: "Email received on 25 October 2026",
+    }, actor, now)).not.toThrow();
     expect(() =>
       reduce(
         s,

@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "project": {
+    "name": "solar-sales-desk",
+    "productType": "Solar sales CRM and operations dashboard",
+    "stack": [
+      "react",
+      "shadcn",
+      "tailwind-v4",
+      "vite"
+    ]
+  },
+  "sources": {
+    "tokens": [],
+    "components": [
+      "src/components/ui"
+    ],
+    "assets": [],
+    "instructions": []
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": { "background": "#f3f5f1", "surface": "#ffffff", "foreground": "#18241e", "primary": "#17634b", "accent": "#e8ad32", "border": "#dce3da" },
+    "typography": { "family": "Inter, ui-sans-serif, system-ui", "style": "Readable business interface with tabular numerals" },
+    "spacing": { "density": "compact tables and controls; comfortable page-level spacing" },
+    "radius": { "panel": "12px", "control": "8px", "pill": "999px" },
+    "shadows": { "surface": "0 8px 24px rgb(28 53 39 / 5%)" },
+    "motion": { "style": "Subtle transitions; respect reduced motion" },
+    "density": "compact"
+  },
+  "components": {
+    "installed": [
+      "badge",
+      "button",
+      "dialog",
+      "field",
+      "label",
+      "separator"
+    ],
+    "preferredPrimitives": [
+      "radix-ui"
+    ],
+    "patterns": []
+  },
+  "constraints": {
+    "must": ["Use saved application state for all customer records and metrics", "Keep calling gated by recorded consent, an agreed schedule, provider readiness and allowance", "Keep admin approval gates for customer-facing quotations and invoices", "Make tables, filters and actions keyboard accessible and responsive", "Label demo or local preview mode clearly"],
+    "avoid": ["Invented leads, metrics, costs, conversion scores or testimonials", "Animated or destructive bulk actions that do not fit the product workflow", "Large empty dashboard panels that push priority information below the fold", "Unapproved automatic customer communication"]
+  },
+  "decisions": [
+    {
+      "direction": "Compact solar operations workspace",
+      "prompt": "Design Solar Sales Desk as a high-trust solar sales operations workspace: warm off-white canvas, deep forest navigation, restrained solar-gold highlights, dense readable tables with clear status chips, real-record search and filters, concise KPI cards, and responsive priority actions. Preserve explicit consent, calling readiness, and administrator approval gates. Use only actual saved business data and show empty states instead of sample customer records.",
+      "references": [
+        { "title": "21st.dev Leads Data Table pattern (structure only)", "url": "https://21st.dev/@isaiahbjork/components/leads-data-table", "used": "Compact CRM table hierarchy, clear stage and source presentation; implementation uses SolarDesk state and does not reuse sample records or destructive demo actions." },
+        { "title": "21st.dev Revenue Charts and KPI pattern (visual reference)", "url": "https://21st.dev/@uvain/components/revenue-charts-kpi", "used": "Concise KPI grouping and restrained chart framing." }
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "fact": "components.installed",
+      "source": "src/components/ui"
+    },
+    {
+      "fact": "project.stack:react",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:shadcn",
+      "source": "components.json"
+    },
+    {
+      "fact": "project.stack:tailwind-v4",
+      "source": "package.json"
+    },
+    {
+      "fact": "project.stack:vite",
+      "source": "package.json"
+    }
+  ],
+  "generatedAt": "2026-10-25T13:21:38.301Z"
+}

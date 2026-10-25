@@ -5,6 +5,7 @@ import { live, request } from "../api";
 import { Button } from "./ui/button";
 import { FieldInput, Table, Tag, type Run } from "./shared";
 import { BarGraph } from "./ReportGraphs";
+import { Search } from "lucide-react";
 
 type Props = { state: State; run: Run; onEnquiry: (id: string) => void };
 export default function Leads({ state, run, onEnquiry }: Props) {
@@ -20,7 +21,17 @@ export default function Leads({ state, run, onEnquiry }: Props) {
   const [permission, setPermission] = useState("");
   const [solarProfile, setSolarProfile] = useState<SolarProfile>(blankSolarProfile());
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [stageFilter, setStageFilter] = useState("All stages");
   const leads = state.leads || [];
+  const stages = Array.from(new Set(leads.map((item) => item.status))).sort();
+  const filteredLeads = leads.filter((item) => {
+    const customer = state.customers.find((record) => record.id === item.customerId);
+    const term = search.trim().toLocaleLowerCase();
+    const matchesSearch = !term || [customer?.company, customer?.contact, customer?.phone, customer?.email, item.source, item.sourceReference]
+      .some((value) => value?.toLocaleLowerCase().includes(term));
+    return matchesSearch && (stageFilter === "All stages" || item.status === stageFilter);
+  });
   const lead = leads.find((l) => l.id === selected);
   const jobs = state.communicationJobs||[];
   return (
@@ -102,10 +113,11 @@ export default function Leads({ state, run, onEnquiry }: Props) {
               onChange={setReference}
             />
             <FieldInput
-              label="WhatsApp number (international format, optional)"
+              label="WhatsApp number (optional)"
               value={whatsapp}
               onChange={setWhatsApp}
             />
+            <p className="field-hint">Enter an Indian 10-digit number or an international number with country code. Spaces, brackets and dashes are accepted.</p>
             <FieldInput
               label="WhatsApp permission evidence (customer response, source and date)"
               value={permission}
@@ -141,9 +153,16 @@ export default function Leads({ state, run, onEnquiry }: Props) {
         {error ? <p role="alert">{error}</p> : null}
       </details>
       <section className="panel">
-        <h2>Lead and call queue</h2>
+        <div className="section-heading lead-table-heading">
+          <div><h2>Lead and call queue</h2><p className="muted">{filteredLeads.length} of {leads.length} contacts</p></div>
+          <div className="lead-table-filters">
+            <label className="search lead-search"><Search aria-hidden /><input aria-label="Search leads" placeholder="Search name, phone, email or source" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
+            <label className="sr-only" htmlFor="lead-stage-filter">Filter leads by stage</label>
+            <select id="lead-stage-filter" value={stageFilter} onChange={(event) => setStageFilter(event.target.value)}><option>All stages</option>{stages.map((stage) => <option key={stage}>{stage}</option>)}</select>
+          </div>
+        </div>
         <Table headers={["Customer / contact", "Source", "Stage", "Readiness", "Call status / time", "Action"]}>
-          {leads.map((l) => (
+          {filteredLeads.map((l) => (
             <tr key={l.id}>
               <td>
                 {state.customers.find((c) => c.id === l.customerId)?.company}
@@ -167,12 +186,8 @@ export default function Leads({ state, run, onEnquiry }: Props) {
             </tr>
           ))}
         </Table>
-        {!leads.length ? (
-          <p>
-            No leads yet. Capture one above; imported leads are not contacted
-            automatically.
-          </p>
-        ) : null}
+        {!leads.length ? <p className="empty">No leads yet. Capture one above; imported leads are not contacted automatically.</p> : null}
+        {leads.length > 0 && !filteredLeads.length ? <p className="empty">No leads match these filters. Clear the search or choose another stage.</p> : null}
       </section>
       <details className="panel lead-analytics"><summary>Pipeline overview <small>Current stage counts; no conversion prediction until outcome data is available.</small></summary><BarGraph title="Lead stages" rows={[
         {label:"Captured / awaiting reply",value:leads.filter(l=>["Captured","Awaiting reply"].includes(l.status)).length},
@@ -213,6 +228,7 @@ function LeadDetail({
 }: { lead: Lead } & Props) {
   const [response, setResponse] = useState("Products");
   const [evidence, setEvidence] = useState("");
+  const [whatsappEvidence, setWhatsAppEvidence] = useState(l.whatsappConsent);
   const [at, setAt] = useState("");
   const [consent, setConsent] = useState(l.callConsent);
   const [language, setLanguage] = useState(l.language);
@@ -241,6 +257,29 @@ function LeadDetail({
       ) : (
         <>
           <h3>1. Confirm interest and contact permission</h3>
+          {!l.whatsappConsent ? (
+            <div className="form-grid">
+              <FieldInput
+                label="WhatsApp permission evidence (customer consent wording, date and source)"
+                value={whatsappEvidence}
+                onChange={setWhatsAppEvidence}
+              />
+              <Button
+                disabled={!l.whatsapp || whatsappEvidence.trim().length < 5}
+                onClick={async () => {
+                  const saved = await run({
+                    type: "lead.whatsapp-permission",
+                    id: l.id,
+                    evidence: whatsappEvidence,
+                  });
+                  if (saved) setError("");
+                }}
+              >
+                Record WhatsApp permission
+              </Button>
+              <small>Record only consent the customer actually gave. This does not send a message.</small>
+            </div>
+          ) : null}
           {live&&<Button variant="outline" disabled={!l.whatsappConsent||!l.whatsapp} onClick={()=>run({type:"contact.whatsapp",id:l.id})}>Send approved WhatsApp qualification template</Button>}
           <p>
             Prepared WhatsApp text — review and send deliberately using your

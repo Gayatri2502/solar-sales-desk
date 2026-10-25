@@ -623,6 +623,17 @@ export function reduce(
       detail = l.id;
       break;
     }
+    case "lead.whatsapp-permission": {
+      const l = lookup(s.leads, cmd.id);
+      if (["Converted", "Opted out"].includes(l.status))
+        fail("This lead is closed or opted out.");
+      if (!l.whatsapp) fail("Add a valid WhatsApp number before recording permission.");
+      l.whatsappConsent = z.string().trim().min(5).max(1000).parse(cmd.evidence);
+      l.updatedAt = now;
+      event("lead.whatsapp_permission_recorded", l.id);
+      detail = l.id;
+      break;
+    }
     case "lead.schedule": {
       const l = lookup(s.leads, cmd.id);
       if (!["Qualified", "Scheduled"].includes(l.status))

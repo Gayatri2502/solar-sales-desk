@@ -442,18 +442,6 @@ export default function App() {
               </section>
             )
           ) : null}
-          {page === "Dashboard" && admin ? (
-            <section className="panel">
-              <h2>Weekly, monthly and yearly reports</h2>
-              <p>
-                Review enquiry conversion, won order value, product margins,
-                call outcomes, human quality reviews and recorded spending.
-              </p>
-              <Button onClick={() => navigate("Reports")}>
-                Open admin reports
-              </Button>
-            </section>
-          ) : null}
           {page === "Leads & Calls" ? (
             <Leads
               state={state}
@@ -465,38 +453,14 @@ export default function App() {
             />
           ) : null}
           {page === "Dashboard" ? (
-            <section className="panel">
-              <h2>Customer call queue</h2>
-              <p>
-                {
-                  (state.leads || []).filter(
-                    (l) =>
-                      l.status === "Scheduled" &&
-                      Date.parse(l.scheduledAt) <= Date.now(),
-                  ).length
-                }{" "}
-                consented appointments due
-              </p>
-              <p>
-                {live?"Calls require recorded customer consent, an agreed time, provider access and available communication allowance.":"Connect an approved calling provider to start outbound calls."}
-              </p>
-              <div className="toolbar">
-                <Button
-                  variant="outline"
-                  onClick={() => navigate("Leads & Calls")}
-                >
-                  Open leads and calls
-                </Button>
-              </div>
-            </section>
-          ) : null}
-          {page === "Dashboard" ? (
             <Dashboard
               state={state}
               due={due}
               drafts={drafts}
               value={value}
               won={won}
+              admin={admin}
+              callingConfigured={live}
               onEnquiry={(id) => {
                 navigate("Enquiries");
                 setSelectedEnquiry(id);
