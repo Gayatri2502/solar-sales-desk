@@ -498,6 +498,7 @@ function AuthPage({
           <a href="#home">Back to the website</a>
         </div>
         <section className="auth-card">
+          {configured && <>
           <h2>
             {recovery
               ? "Choose a new password"
@@ -580,21 +581,23 @@ function AuthPage({
           {!signup && !reset && (
             <a href="#reset-password">Forgot your password?</a>
           )}
+          </>}
           <p className="public-fine">
             <a href="#privacy">Data and contact preferences</a>. Paid services
             require a separate agreed plan and activation.
           </p>
           {!configured && (
-            <details className="operator-access">
-              <summary>Local testing access</summary>
+            <section className="operator-access" aria-label="Workspace access">
+              <h2>{live ? "Account setup required" : "Open the local ERP"}</h2>
               <p>
-                Authentication is not connected. The isolated synthetic
-                workspace makes no live calls or sends.
+                {live
+                  ? "Live account access is unavailable. Contact your operator to complete authentication setup."
+                  : "Use the demo workspace to explore enquiries, quotations, stock and orders. It uses synthetic data saved in this browser. Real account signup, calls and messages are not connected yet."}
               </p>
-              <Button variant="outline" onClick={onSandbox}>
-                Open synthetic test workspace
-              </Button>
-            </details>
+              {!live && <Button onClick={onSandbox}>
+                Open demo workspace
+              </Button>}
+            </section>
           )}
         </section>
       </main>
