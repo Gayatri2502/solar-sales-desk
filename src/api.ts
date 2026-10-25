@@ -7,7 +7,7 @@ import {
   reduce,
   visibleState,
 } from "./domain";
-import { seed } from "./seed";
+import { emptyState } from "./seed";
 const env = import.meta.env;
 export const live = env.VITE_MODE === "live";
 export const auth =
@@ -24,7 +24,7 @@ export const auth =
     : live && env.VITE_SUPABASE_URL && env.VITE_SUPABASE_ANON_KEY
       ? createClient(env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)
       : null;
-const storageKey = "ssd.synthetic.v1";
+const storageKey = "ssd.local-preview.v2";
 export function loadDemo(): State {
   try {
     const data = JSON.parse(window.localStorage.getItem(storageKey) || "null");
@@ -32,7 +32,7 @@ export function loadDemo(): State {
   } catch {
     /* corrupt demo storage resets */
   }
-  return seed();
+  return emptyState();
 }
 export async function request(path: string, body?: unknown) {
   const session = (await auth?.auth.getSession())?.data.session;
@@ -65,15 +65,13 @@ export async function command(
       ).state as State;
     return (await request("/command", cmd)).state as State;
   }
-  let next = reduce(state, cmd, actor);
-  if (cmd.type === "invoice.approve")
-    next = reduce(next, { type: "invoice.demoSend", id: cmd.id }, actor);
+  const next = reduce(state, cmd, actor);
   window.localStorage.setItem(storageKey, JSON.stringify(next));
   return next;
 }
 export const demoVisible = visibleState;
 export function resetDemo() {
   window.localStorage.removeItem(storageKey);
-  return seed();
+  return emptyState();
 }
 export type { Session };

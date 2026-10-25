@@ -258,15 +258,35 @@ export function seed(): State {
   return x;
 }
 export function emptyState(): State {
-  const s = seed();
   return {
-    ...s,
+    version: 1,
     settings: {
-      ...s.settings,
       name: "My solar business",
       address: "",
       contact: "",
+      gstin: "",
+      currency: "INR",
+      timezone: "Asia/Kolkata",
+      taxBps: null,
+      deliveryTaxBps: null,
+      prefix: "SSD-",
+      validDays: 14,
+      paymentTerms: "",
+      deliveryTerms: "",
+      marginBps: 0,
+      stockStaleDays: 7,
+      subscription: "Pilot",
+      renewal: "",
+      fee: 0,
+      allowance: 0,
+      userLimit: 5,
+      spendCeilingMicros: 0,
+      baseline: { prepMinutes: "", followupPercent: "", correctionPercent: "", conversionPercent: "", weeklyUsers: "" },
     },
+    communicationJobs: [],
+    communicationPolicy: { autoCalls: false, monthlyCeiling: 0, userDaily: 0, tenantDaily: 0 },
+    inboundMessages: [],
+    invoices: [],
     followups: [],
     leads: [],
     expenses: [],
@@ -279,5 +299,6 @@ export function emptyState(): State {
     audit: [],
     events: [],
     users: [],
+    usage: [],
   };
 }

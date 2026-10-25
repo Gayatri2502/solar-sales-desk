@@ -190,7 +190,7 @@ export default function NewEnquiry({
               ? "Extracting…"
               : live
                 ? "Extract with configured provider"
-                : "Extract with demo parser"}
+                : "Parse entered text locally"}
           </Button>
           <Button
             variant="outline"
@@ -216,7 +216,7 @@ export default function NewEnquiry({
         <p className="muted">
           {live
             ? "Text is sent to the configured server-side provider on demand. Review the output."
-            : "The demo parser only recognizes quantities followed by pcs, units, sets or nos. It does not infer technical compatibility."}
+            : "Local parsing only recognizes quantities and units explicitly written in your text. Review every result; it does not infer technical compatibility."}
         </p>
         {extraction ? (
           <>

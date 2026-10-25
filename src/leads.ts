@@ -26,9 +26,31 @@ export type Lead = {
   notes: string;
   requirements: string;
   enquiryId: string;
+  solarProfile?: SolarProfile;
   createdAt: string;
   updatedAt: string;
 };
+export const solarProfileSchema = z.strictObject({
+  customerType: z.enum(["Residential", "Commercial", "Industrial", "Other"]).default("Other"),
+  monthlyBill: z.string().max(80).default(""),
+  monthlyConsumption: z.string().max(80).default(""),
+  propertyType: z.string().max(120).default(""),
+  ownership: z.enum(["Unknown", "Owner", "Tenant"]).default("Unknown"),
+  siteLocation: z.string().max(300).default(""),
+  roofArea: z.string().max(80).default(""),
+  roofType: z.string().max(120).default(""),
+  shading: z.string().max(200).default(""),
+  systemCapacity: z.string().max(80).default(""),
+  systemType: z.enum(["Unknown", "On-grid", "Off-grid", "Hybrid"]).default("Unknown"),
+  batteryBackup: z.string().max(200).default(""),
+  budget: z.string().max(80).default(""),
+  financing: z.string().max(160).default(""),
+  timeline: z.string().max(120).default(""),
+  decisionStatus: z.string().max(160).default(""),
+  subsidyInterest: z.boolean().default(false),
+  surveyAvailability: z.string().max(160).default(""),
+});
+export type SolarProfile = z.infer<typeof solarProfileSchema>;
 export const phoneSchema = z
   .string()
   .regex(
@@ -40,6 +62,10 @@ export const leadInput = z.object({
   source: z.enum([
     "WhatsApp",
     "Website form",
+    "CSV import",
+    "CRM",
+    "Campaign",
+    "Manual",
     "Facebook",
     "Instagram",
     "Other",
@@ -48,6 +74,7 @@ export const leadInput = z.object({
   whatsapp: z.union([phoneSchema, z.literal("")]),
   whatsappConsent: z.string().max(1000).default(""),
   notes: z.string().max(2000).default(""),
+  solarProfile: solarProfileSchema.optional(),
 });
 export const callQuestions = [
   "Introduce yourself as an automated assistant and ask whether it is a good time to speak.",
@@ -55,7 +82,12 @@ export const callQuestions = [
   "Ask for product category, brand preference and verified technical requirements.",
   "Confirm quantity and unit for every requested item.",
   "Ask for company/contact, delivery address, required date, and site constraints.",
+  "If relevant, ask about the electricity bill and consumption period; record the customer's units as stated.",
+  "Ask property type and ownership, location, usable rooftop area, roof type and shading; leave unknown measurements blank.",
+  "Record desired capacity and on-grid/off-grid/hybrid preference only when the customer states them; ask about battery backup.",
   "Ask about budget and payment expectations without promising a discount.",
+  "Ask purchase timeline, decision status and preferred site-survey availability.",
+  "If asked about subsidies, record the question and have staff verify current official eligibility and terms; do not estimate savings or eligibility.",
   "Read back the requirements and ask the customer to correct them.",
   "Explain that availability, compatibility, price and delivery will be reviewed by staff; quotations need admin approval.",
 ];

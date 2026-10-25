@@ -48,7 +48,7 @@ import {
   resetDemo,
   type Session,
 } from "./api";
-import { seed, emptyState } from "./seed";
+import { emptyState } from "./seed";
 import { previewCSV, customerCSV, download, type Preview } from "./csv";
 import { Button } from "./components/ui/button";
 import { Badge } from "./components/ui/badge";
@@ -221,7 +221,7 @@ export default function App() {
         {!auth ? (
           <p role="alert">
             Live configuration is missing. Set Supabase URL and public key, or
-            use demo mode.
+            use the local preview workspace.
           </p>
         ) : (
           <form
@@ -335,7 +335,7 @@ export default function App() {
           <span className="avatar">{admin ? "PA" : "RS"}</span>
           <div>
             <strong>{admin ? "Business admin" : "Sales representative"}</strong>
-            <small>{live ? session?.user.email : "Synthetic workspace"}</small>
+            <small>{live ? session?.user.email : "Local preview"}</small>
           </div>
         </div>
       </aside>
@@ -347,9 +347,9 @@ export default function App() {
           <div className="toolbar">
             {!live ? (
               <label className="role-switch">
-                Demo role{" "}
+                Preview role{" "}
                 <select
-                  aria-label="Demo role"
+                  aria-label="Preview role"
                   value={role}
                   onChange={(e) => {
                     const r = e.target.value as typeof role;
@@ -371,10 +371,10 @@ export default function App() {
         </header>
         {!live ? (
           <div className="demo-banner">
-            <strong>Demo mode</strong>
+            <strong>Local preview</strong>
             <span>
-              Synthetic data only. Saved in this browser. No AI service or live
-              database is contacted.
+              Preview records are saved in this browser. AI, calling, messaging,
+              email delivery and the live database are not connected.
             </span>
           </div>
         ) : null}
@@ -478,7 +478,7 @@ export default function App() {
                 consented appointments due
               </p>
               <p>
-                {live?"Due calls require customer permission, configured provider access and available communication allowance.":"Synthetic calls capture test requirements for staff review."}
+                {live?"Calls require recorded customer consent, an agreed time, provider access and available communication allowance.":"Connect an approved calling provider to start outbound calls."}
               </p>
               <div className="toolbar">
                 <Button
@@ -487,16 +487,6 @@ export default function App() {
                 >
                   Open leads and calls
                 </Button>
-                {!live ? (
-                  <Button
-                    onClick={async () => {
-                      await run({ type: "lead.simulateDue" });
-                      navigate("Leads & Calls");
-                    }}
-                  >
-                    Run due demo calls
-                  </Button>
-                ) : null}
               </div>
             </section>
           ) : null}
@@ -772,7 +762,7 @@ export default function App() {
           Solar Sales Desk{" "}
           <span>
             Approved invoice email · Configurable taxes ·{" "}
-            {live ? "Live workspace" : "Synthetic demonstration"}
+            {live ? "Live workspace" : "Local preview · external actions disabled"}
           </span>
         </footer>
       </div>

@@ -139,7 +139,7 @@ export default function AdminReports({
         ? aiDays
           ? "Complete requested range"
           : "Unavailable"
-        : "Synthetic local ledger",
+        : "No configured AI usage ledger",
       snapshot:
         "Current status at export; prior reports may change after cancellations",
     }).map(([metric, value]) => ({

@@ -87,7 +87,7 @@ test("mobile, keyboard, dialog focus and accessibility", async ({ page }) => {
 });
 test("sales hides costs and admin actions", async ({ page }) => {
   await page.goto("/");
-  await page.getByLabel("Demo role").selectOption("sales");
+  await page.getByLabel("Preview role").selectOption("sales");
   await page
     .getByRole("link", { name: "Products & Stock", exact: true })
     .click();

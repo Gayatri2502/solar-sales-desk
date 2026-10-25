@@ -194,7 +194,7 @@ export default function ReportGraphs({
           <>
             <BarGraph
               title="Recorded call outcomes"
-              note="Manual/live records only. Demo calls excluded."
+              note="Recorded call outcomes for this period. No provider data is assumed."
               rows={[
                 { label: "Answered", value: r.answered },
                 { label: "Unattended / busy", value: r.unattended },

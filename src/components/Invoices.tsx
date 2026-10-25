@@ -52,7 +52,7 @@ export default function Invoices({
           <p>
             {live
               ? "Email delivery needs a verified sender and server configuration. Accepted by the email provider does not confirm customer receipt."
-              : "Demo approval simulates sending. No customer receives an email."}
+              : "Local preview does not send email. Configure and verify a sender before customer delivery."}
           </p>
         </section>
         <Table
@@ -197,9 +197,7 @@ export default function Invoices({
               disabled={working || dirty}
               onClick={() => action("invoice.approve")}
             >
-              {live
-                ? "Approve and queue customer email"
-                : "Approve and simulate email"}
+              {live ? "Approve invoice" : "Approve invoice (preview only)"}
             </Button>
           )}
           {["Pending approval", "Approved"].includes(i.status) &&
@@ -223,11 +221,11 @@ export default function Invoices({
         </div>
         <p>
           {i.status === "Approved"
-            ? "Approved and queued. Delivery waits for server email configuration, allowance and scheduler."
+            ? live ? "Approved. Email delivery waits for verified server configuration and the delivery queue." : "Approved in local preview. No email was sent."
             : i.status === "Sent"
               ? `Email accepted by provider · ${i.sentAt}. Customer delivery is not verified.`
               : i.status === "Demo sent"
-                ? "Synthetic email simulation completed. Nothing was sent."
+                ? "Legacy preview status. No email was sent."
                 : i.status === "Failed"
                   ? i.error
                   : i.status === "Sending"

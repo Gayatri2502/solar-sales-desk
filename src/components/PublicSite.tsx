@@ -592,10 +592,10 @@ function AuthPage({
               <p>
                 {live
                   ? "Live account access is unavailable. Contact your operator to complete authentication setup."
-                  : "Use the demo workspace to explore enquiries, quotations, stock and orders. It uses synthetic data saved in this browser. Real account signup, calls and messages are not connected yet."}
+                  : "Open an empty local preview workspace. Records stay in this browser; account signup, live database, AI calling and customer messaging are not connected."}
               </p>
               {!live && <Button onClick={onSandbox}>
-                Open demo workspace
+                Open local preview
               </Button>}
             </section>
           )}

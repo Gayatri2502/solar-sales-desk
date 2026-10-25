@@ -355,7 +355,7 @@ export default function BusinessSettings({
               </form>
             ) : (
               <p>
-                Demo users are synthetic. Live mode supports admin-created
+                Local preview roles are for interface review. Live mode supports admin-created
                 email/password accounts.
               </p>
             )}
@@ -395,7 +395,7 @@ export default function BusinessSettings({
               </Button>
               {!live ? (
                 <Button variant="outline" onClick={() => setDeleteOpen(true)}>
-                  Reset synthetic demo
+                  Reset local preview
                 </Button>
               ) : (
                 <Button variant="outline" onClick={() => setDeleteOpen(true)}>
@@ -502,7 +502,7 @@ export default function BusinessSettings({
         <p>
           {live
             ? "Provider is configured by the operator. Extraction runs only on demand."
-            : "Demo extraction is local and costs ₹0. No hosted provider is activated."}{" "}
+            : "Text parsing runs locally on the enquiry you enter. No hosted AI provider is activated."}{" "}
           Provider cost estimates may lag billing. Usage is limited; manual
           entry remains available.
         </p>
@@ -531,12 +531,12 @@ export default function BusinessSettings({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {live ? "Delete business data" : "Reset demo data"}
+              {live ? "Delete business data" : "Reset local preview"}
             </DialogTitle>
             <DialogDescription>
               {live
                 ? "Export your data first. This deletes business records and memberships. Auth accounts are retained for operator review."
-                : "This clears synthetic changes in this browser and restores the demo."}
+                : "This clears local preview changes in this browser and returns to an empty workspace."}
             </DialogDescription>
           </DialogHeader>
           {live ? (

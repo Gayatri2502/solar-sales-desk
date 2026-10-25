@@ -7,7 +7,7 @@ import {
   type CallRecord,
   type Expense,
 } from "./reporting";
-import { leadInput, phoneSchema, type Lead } from "./leads";
+import { leadInput, phoneSchema, solarProfileSchema, type Lead } from "./leads";
 export type Role = "admin" | "sales";
 export const categories = [
   "Panel",
@@ -565,6 +565,7 @@ export function reduce(
         fail("This customer already has an open lead. Update it instead.");
       const lead: Lead = {
         ...input,
+        solarProfile: solarProfileSchema.parse(input.solarProfile || {}),
         phone: customer.phone,
         id: uid(),
         interest: "Unknown",

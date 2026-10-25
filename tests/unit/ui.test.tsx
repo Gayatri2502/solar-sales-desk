@@ -11,6 +11,9 @@ import {
 import App from "../../src/App";
 import { seed } from "../../src/seed";
 import { reduce } from "../../src/domain";
+function useFixture(state = seed()) {
+  window.localStorage.setItem("ssd.local-preview.v2", JSON.stringify(state));
+}
 beforeEach(() => {
   const values = new Map<string, string>();
   Object.defineProperty(window, "localStorage", {
@@ -34,6 +37,7 @@ afterEach(() => {
 });
 describe("rendered business workflow", () => {
   it("opens created quotation without navigation losing selection", async () => {
+    useFixture();
     render(<App />);
     fireEvent.click(screen.getByRole("link", { name: /Enquiries/ }));
     const row = screen.getByText("Aarav Energy · Demo").closest("tr")!;
@@ -68,7 +72,7 @@ describe("rendered business workflow", () => {
       },
       { id: "demo-admin", role: "admin" },
     );
-    window.localStorage.setItem("ssd.synthetic.v1", JSON.stringify(s));
+    window.localStorage.setItem("ssd.local-preview.v2", JSON.stringify(s));
     location.hash = "Quotations";
     render(<App />);
     fireEvent.click(screen.getByRole("button", { name: "Open quote" }));
@@ -77,8 +81,9 @@ describe("rendered business workflow", () => {
     expect(doc.textContent).not.toMatch(/cost|margin|₹8,900|₹1,78,000/i);
   });
   it("sales has no product-cost column or management action", () => {
+    useFixture();
     render(<App />);
-    fireEvent.change(screen.getByLabelText("Demo role"), {
+    fireEvent.change(screen.getByLabelText("Preview role"), {
       target: { value: "sales" },
     });
     fireEvent.click(screen.getByRole("link", { name: "Products & Stock" }));
@@ -88,6 +93,7 @@ describe("rendered business workflow", () => {
 });
 
 it("shows admin reports with calendar filters and prevents sales from opening financial reports", () => {
+  useFixture();
   location.hash = "Reports";
   render(<App />);
   expect(
@@ -97,7 +103,7 @@ it("shows admin reports with calendar filters and prevents sales from opening fi
     target: { value: "Yearly" },
   });
   expect(screen.getByText(/2026-01-01 → 2026-12-31/)).toBeTruthy();
-  fireEvent.change(screen.getByLabelText("Demo role"), {
+  fireEvent.change(screen.getByLabelText("Preview role"), {
     target: { value: "sales" },
   });
   expect(
@@ -107,7 +113,7 @@ it("shows admin reports with calendar filters and prevents sales from opening fi
   expect(screen.getByRole("alert").textContent).toContain("Business admin");
 });
 
-it("sales submits an order invoice, admin approval triggers only labeled demo delivery", async () => {
+it("sales submits an order invoice and preview approval does not send email", async () => {
   let s = seed();
   s.settings.taxBps = 0;
   s.settings.deliveryTaxBps = 0;
@@ -127,10 +133,10 @@ it("sales submits an order invoice, admin approval triggers only labeled demo de
     actor,
   );
   s = reduce(s, { type: "order.create", id: s.quotes[0].id }, actor);
-  window.localStorage.setItem("ssd.synthetic.v1", JSON.stringify(s));
+  window.localStorage.setItem("ssd.local-preview.v2", JSON.stringify(s));
   location.hash = "Invoices";
   render(<App />);
-  fireEvent.change(screen.getByLabelText("Demo role"), {
+  fireEvent.change(screen.getByLabelText("Preview role"), {
     target: { value: "sales" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Review invoice" }));
@@ -139,28 +145,29 @@ it("sales submits an order invoice, admin approval triggers only labeled demo de
   );
   expect(await screen.findByText("Pending approval")).toBeTruthy();
   expect(
-    screen.queryByRole("button", { name: "Approve and simulate email" }),
+    screen.queryByRole("button", { name: "Approve invoice (preview only)" }),
   ).toBeNull();
   expect(
     screen.queryByRole("button", { name: "Print approved invoice / PDF" }),
   ).toBeNull();
-  fireEvent.change(screen.getByLabelText("Demo role"), {
+  fireEvent.change(screen.getByLabelText("Preview role"), {
     target: { value: "admin" },
   });
   fireEvent.click(
-    screen.getByRole("button", { name: "Approve and simulate email" }),
+    screen.getByRole("button", { name: "Approve invoice (preview only)" }),
   );
-  expect(await screen.findByText("Demo sent")).toBeTruthy();
-  expect(screen.getByText(/Synthetic email simulation completed/)).toBeTruthy();
+  expect(await screen.findByText("Approved")).toBeTruthy();
+  expect(screen.getByText(/No email was sent/)).toBeTruthy();
   expect(document.querySelector(".customer-document")!.textContent).not.toMatch(
     /Internal cost|margin|₹8,900/,
   );
 });
 
 it("sales graphs include their own cohort and exclude private financial graphs", () => {
+  useFixture();
   location.hash = "My%20Reports";
   render(<App />);
-  fireEvent.change(screen.getByLabelText("Demo role"), {
+  fireEvent.change(screen.getByLabelText("Preview role"), {
     target: { value: "sales" },
   });
   expect(screen.getByRole("heading", { name: "My sales report" })).toBeTruthy();

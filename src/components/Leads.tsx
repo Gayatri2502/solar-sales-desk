@@ -1,61 +1,53 @@
 import { useState } from "react";
-import { type State, type Extraction, mockExtract } from "../domain";
-import { callQuestions, callTime, scheduledInstant, type Lead } from "../leads";
+import { type State, type Extraction, mockExtract, uid } from "../domain";
+import { callQuestions, callTime, scheduledInstant, type Lead, type SolarProfile } from "../leads";
 import { live, request } from "../api";
 import { Button } from "./ui/button";
 import { FieldInput, Table, Tag, type Run } from "./shared";
+import { BarGraph } from "./ReportGraphs";
 
 type Props = { state: State; run: Run; onEnquiry: (id: string) => void };
 export default function Leads({ state, run, onEnquiry }: Props) {
   const [selected, setSelected] = useState("");
-  const [customerId, setCustomer] = useState(state.customers[0]?.id || "");
+  const [company, setCompany] = useState("");
+  const [contact, setContact] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [address, setAddress] = useState("");
   const [source, setSource] = useState("Website form");
   const [reference, setReference] = useState("");
   const [whatsapp, setWhatsApp] = useState("");
   const [permission, setPermission] = useState("");
+  const [solarProfile, setSolarProfile] = useState<SolarProfile>(blankSolarProfile());
   const [error, setError] = useState("");
   const leads = state.leads || [];
   const lead = leads.find((l) => l.id === selected);
   const jobs = state.communicationJobs||[];
-  const due = leads.filter(
-    (l) => l.status === "Scheduled" && Date.parse(l.scheduledAt) <= Date.now(),
-  );
   return (
     <>
-      <section className="panel">
-        <h2>Qualification → scheduled call → reviewed enquiry</h2>
-        <p>
-          Capture contact details in Customers, then add the lead here. A phone
-          number alone is not permission to message or call.
-        </p>
-        <div className="form-grid">
-          <p>
-            <strong>Communication allowance is configured in Settings</strong>
-            <br />
-            {live?"Provider access, approved sender IDs and estimated usage limits are checked before outbound contact.":"Synthetic test calls make no outbound network request."}
-          </p>
-          <p>
-            <strong>{due.length} calls due</strong>
-            <br />
-            {live?(state.communicationPolicy?.autoCalls?"Automatic due-call processing is enabled by admin; server provider activation is also required.":"Automatic calling is off. Admin can configure it in Settings."):"Up to two due appointments can be simulated per run."}
-          </p>
+      <section className="panel lead-overview">
+        <div>
+          <h2>Lead work queue</h2>
+          <p className="muted">Capture customer requirements, review agreed callbacks, and move qualified opportunities into enquiries.</p>
         </div>
-        {!live ? (
-          <Button
-            disabled={!due.length}
-            onClick={() => run({ type: "lead.simulateDue" })}
-          >
-            Run due demo calls
-          </Button>
-        ) : null}
-        {!live&&<p className="muted">Synthetic answers are only for local testing; they are not customer conversations.</p>}
+        <div className="lead-kpis" aria-label="Lead activity summary">
+          <span><strong>{leads.length}</strong> contacts</span>
+          <span><strong>{leads.filter(l=>["Qualified","Scheduled","Details captured"].includes(l.status)).length}</strong> qualified or in progress</span>
+          <span><strong>{jobs.filter(j=>j.kind==="Voice").length}</strong> call attempts logged</span>
+        </div>
       </section>
-      <section className="panel">
-        <h2>Add a lead</h2>
+      <details className="panel lead-capture">
+        <summary><span>Add a contact</span><small>Customer, source and solar requirements</small></summary>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             setError("");
+            const existing = state.customers.find(c => c.phone.trim() === phone.trim());
+            const openLead = existing && leads.find(l => l.customerId === existing.id && !["Converted", "Not interested", "Opted out"].includes(l.status));
+            if (openLead) { setSelected(openLead.id); setError("This contact already has an open lead. It is selected below for updating."); return; }
+            const customerId = existing?.id || uid();
+            const savedCustomer = await run({ type: "customer.save", customer: { id: customerId, company, contact, phone, email, address, gstin: existing?.gstin || "", notes: existing?.notes || "", priceList: existing?.priceList || {} } });
+            if (!savedCustomer) return;
             const next = await run({
               type: "lead.capture",
               lead: {
@@ -65,31 +57,23 @@ export default function Leads({ state, run, onEnquiry }: Props) {
                 whatsapp,
                 whatsappConsent: permission,
                 notes: "",
+                solarProfile,
               },
             });
             if (next) {
               setSelected(next.leads?.[0]?.id || "");
+              setCompany(""); setContact(""); setPhone(""); setEmail(""); setAddress("");
               setReference("");
+              setWhatsApp(""); setPermission(""); setSolarProfile(blankSolarProfile());
             }
           }}
         >
           <div className="form-grid">
-            <label>
-              Customer
-              <select
-                aria-label="Lead customer"
-                required
-                value={customerId}
-                onChange={(e) => setCustomer(e.target.value)}
-              >
-                <option value="">Select customer</option>
-                {state.customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.company} · {c.contact}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <FieldInput label="Company / customer" value={company} onChange={setCompany} required />
+            <FieldInput label="Contact name" value={contact} onChange={setContact} required />
+            <FieldInput label="Phone (international format, e.g. +91…)" value={phone} onChange={setPhone} required />
+            <FieldInput label="Email (optional)" type="email" value={email} onChange={setEmail} />
+            <FieldInput label="Address / delivery location (optional)" value={address} onChange={setAddress} />
             <label>
               Source
               <select
@@ -99,6 +83,10 @@ export default function Leads({ state, run, onEnquiry }: Props) {
               >
                 {[
                   "Website form",
+                  "CSV import",
+                  "CRM",
+                  "Campaign",
+                  "Manual",
                   "WhatsApp",
                   "Facebook",
                   "Instagram",
@@ -124,32 +112,57 @@ export default function Leads({ state, run, onEnquiry }: Props) {
               onChange={setPermission}
             />
           </div>
-          <Button disabled={!customerId}>Capture lead</Button>
+          <details className="lead-requirements">
+            <summary>Solar requirement details <small>Leave unknown items blank; confirm with the customer.</small></summary>
+            <div className="form-grid">
+              <label>Customer category<select aria-label="Customer category" value={solarProfile.customerType} onChange={e=>setSolarProfile({...solarProfile,customerType:e.target.value as SolarProfile["customerType"]})}>{["Residential","Commercial","Industrial","Other"].map(x=><option key={x}>{x}</option>)}</select></label>
+              <FieldInput label="Monthly electricity bill (₹, as stated)" value={solarProfile.monthlyBill} onChange={v=>setSolarProfile({...solarProfile,monthlyBill:v})}/>
+              <FieldInput label="Average consumption (unit and period)" value={solarProfile.monthlyConsumption} onChange={v=>setSolarProfile({...solarProfile,monthlyConsumption:v})}/>
+              <FieldInput label="Property type" value={solarProfile.propertyType} onChange={v=>setSolarProfile({...solarProfile,propertyType:v})}/>
+              <label>Property ownership<select aria-label="Property ownership" value={solarProfile.ownership} onChange={e=>setSolarProfile({...solarProfile,ownership:e.target.value as SolarProfile["ownership"]})}>{["Unknown","Owner","Tenant"].map(x=><option key={x}>{x}</option>)}</select></label>
+              <FieldInput label="Installation location" value={solarProfile.siteLocation} onChange={v=>setSolarProfile({...solarProfile,siteLocation:v})}/>
+              <FieldInput label="Usable roof area (unit as stated)" value={solarProfile.roofArea} onChange={v=>setSolarProfile({...solarProfile,roofArea:v})}/>
+              <FieldInput label="Roof type" value={solarProfile.roofType} onChange={v=>setSolarProfile({...solarProfile,roofType:v})}/>
+              <FieldInput label="Shading / site constraints" value={solarProfile.shading} onChange={v=>setSolarProfile({...solarProfile,shading:v})}/>
+              <FieldInput label="Desired system capacity (kW, if known)" value={solarProfile.systemCapacity} onChange={v=>setSolarProfile({...solarProfile,systemCapacity:v})}/>
+              <label>System preference<select aria-label="System preference" value={solarProfile.systemType} onChange={e=>setSolarProfile({...solarProfile,systemType:e.target.value as SolarProfile["systemType"]})}>{["Unknown","On-grid","Off-grid","Hybrid"].map(x=><option key={x}>{x}</option>)}</select></label>
+              <FieldInput label="Battery backup requirement" value={solarProfile.batteryBackup} onChange={v=>setSolarProfile({...solarProfile,batteryBackup:v})}/>
+              <FieldInput label="Budget (₹, as stated)" value={solarProfile.budget} onChange={v=>setSolarProfile({...solarProfile,budget:v})}/>
+              <FieldInput label="Financing requirement" value={solarProfile.financing} onChange={v=>setSolarProfile({...solarProfile,financing:v})}/>
+              <FieldInput label="Purchase timeline" value={solarProfile.timeline} onChange={v=>setSolarProfile({...solarProfile,timeline:v})}/>
+              <FieldInput label="Decision-making status" value={solarProfile.decisionStatus} onChange={v=>setSolarProfile({...solarProfile,decisionStatus:v})}/>
+              <FieldInput label="Site survey availability" value={solarProfile.surveyAvailability} onChange={v=>setSolarProfile({...solarProfile,surveyAvailability:v})}/>
+              <label className="checkbox-field"><input type="checkbox" checked={solarProfile.subsidyInterest} onChange={e=>setSolarProfile({...solarProfile,subsidyInterest:e.target.checked})}/> Asked about subsidy information</label>
+            </div>
+            <p className="muted">Subsidy eligibility, savings and payback are not estimated here. Verify current program rules and source documents before advising a customer.</p>
+          </details>
+          <Button disabled={!company.trim() || !contact.trim() || !phone.trim()}>Save contact and capture lead</Button>
         </form>
         {error ? <p role="alert">{error}</p> : null}
-      </section>
+      </details>
       <section className="panel">
         <h2>Lead and call queue</h2>
-        <Table headers={["Customer / source", "Stage", "Call time", "Action"]}>
+        <Table headers={["Customer / contact", "Source", "Stage", "Readiness", "Call status / time", "Action"]}>
           {leads.map((l) => (
             <tr key={l.id}>
               <td>
                 {state.customers.find((c) => c.id === l.customerId)?.company}
-                <small>
-                  {l.source} · {l.sourceReference || "Manual capture"}
-                </small>
+                <small>{state.customers.find((c) => c.id === l.customerId)?.contact} · {state.customers.find((c) => c.id === l.customerId)?.phone}</small>
               </td>
+              <td>{l.source}<small>{l.sourceReference || "Manual capture"}</small></td>
               <td>
                 <Tag text={l.status === "Converted" ? "Enquiry created" : l.status} />
                 {l.interest === "Services" ? (
                   <small>Staff service handoff</small>
                 ) : null}
               </td>
-              <td>{callTime(l.scheduledAt, state.settings.timezone)}</td>
+              <td>{readiness(l)}<small>Not a purchase probability</small></td>
+              <td>{jobs.filter(j=>j.leadId===l.id&&j.kind==="Voice").at(-1)?.status || (state.callRecords?.filter(c=>c.leadId===l.id).length ? "Call logged" : "No call yet")}<small>{callTime(l.scheduledAt, state.settings.timezone)}</small></td>
               <td>
-                <Button variant="outline" onClick={() => setSelected(l.id)}>
-                  Review lead
-                </Button>
+                <div className="toolbar">
+                  <Button variant="outline" onClick={() => setSelected(l.id)}>Review lead</Button>
+                  {live ? <Button disabled={l.status!=="Scheduled" || !l.callConsent || Date.parse(l.scheduledAt)>Date.now()} onClick={() => run({type:"contact.voice",id:l.id})}>Trigger agreed call</Button> : <Button variant="outline" disabled title="Connect and verify a calling provider to enable calls">Calling unavailable</Button>}
+                </div>
               </td>
             </tr>
           ))}
@@ -161,6 +174,13 @@ export default function Leads({ state, run, onEnquiry }: Props) {
           </p>
         ) : null}
       </section>
+      <details className="panel lead-analytics"><summary>Pipeline overview <small>Current stage counts; no conversion prediction until outcome data is available.</small></summary><BarGraph title="Lead stages" rows={[
+        {label:"Captured / awaiting reply",value:leads.filter(l=>["Captured","Awaiting reply"].includes(l.status)).length},
+        {label:"Qualified",value:leads.filter(l=>l.status==="Qualified").length},
+        {label:"Agreed call scheduled",value:leads.filter(l=>l.status==="Scheduled").length},
+        {label:"Details captured",value:leads.filter(l=>l.status==="Details captured").length},
+        {label:"Converted to enquiry",value:leads.filter(l=>l.status==="Converted").length},
+      ]} /></details>
       {jobs.length?<section className="panel"><h2>Outbound contact history</h2><Table headers={["Channel","Status","Provider reference","Receipt","Estimate / review"]}>{jobs.map(j=><tr key={j.id}><td>{j.kind}</td><td>{j.status}</td><td>{j.providerId||"Not confirmed"}</td><td>{j.receipt||"Not confirmed"}</td><td>{j.error||"Actual billing is reported separately."}</td></tr>)}</Table></section>:null}
       {lead ? (
         <LeadDetail
@@ -173,6 +193,17 @@ export default function Leads({ state, run, onEnquiry }: Props) {
       ) : null}
     </>
   );
+}
+function blankSolarProfile(): SolarProfile {
+  return { customerType: "Residential", monthlyBill: "", monthlyConsumption: "", propertyType: "", ownership: "Unknown", siteLocation: "", roofArea: "", roofType: "", shading: "", systemCapacity: "", systemType: "Unknown", batteryBackup: "", budget: "", financing: "", timeline: "", decisionStatus: "", subsidyInterest: false, surveyAvailability: "" };
+}
+function readiness(l: Lead) {
+  if (l.status === "Converted") return "Enquiry created";
+  if (l.status === "Details captured") return "Details captured";
+  if (l.status === "Scheduled") return "Call agreed";
+  if (l.status === "Qualified") return "Qualified";
+  if (["Not interested", "Opted out"].includes(l.status)) return "Closed";
+  return "Needs qualification";
 }
 function LeadDetail({
   lead: l,
@@ -201,6 +232,8 @@ function LeadDetail({
       <p>
         <Tag text={l.status === "Converted" ? "Enquiry created" : l.status} /> {l.notes}
       </p>
+      {l.solarProfile && <dl className="solar-profile-summary">{([
+        ["Category", l.solarProfile.customerType], ["Monthly bill", l.solarProfile.monthlyBill && `₹${l.solarProfile.monthlyBill}`], ["Consumption", l.solarProfile.monthlyConsumption], ["Property", l.solarProfile.propertyType], ["Ownership", l.solarProfile.ownership !== "Unknown" && l.solarProfile.ownership], ["Location", l.solarProfile.siteLocation], ["Roof area", l.solarProfile.roofArea], ["Roof / shading", [l.solarProfile.roofType,l.solarProfile.shading].filter(Boolean).join(" · ")], ["Capacity", l.solarProfile.systemCapacity], ["System", l.solarProfile.systemType !== "Unknown" && l.solarProfile.systemType], ["Battery", l.solarProfile.batteryBackup], ["Budget", l.solarProfile.budget && `₹${l.solarProfile.budget}`], ["Financing", l.solarProfile.financing], ["Timeline", l.solarProfile.timeline], ["Decision status", l.solarProfile.decisionStatus], ["Site survey", l.solarProfile.surveyAvailability], ["Subsidy interest", l.solarProfile.subsidyInterest && "Asked"]] as [string, string | false][]).filter(([,value])=>value).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
       {l.status === "Converted" ? (
         <Button onClick={() => onEnquiry(l.enquiryId)}>
           Open linked enquiry
