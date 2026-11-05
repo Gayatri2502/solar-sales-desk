@@ -2,7 +2,7 @@
 
 A solar distributor sales application with catalogue matching, exact-money quotations, admin approval, follow-ups, stock-reserved orders, approved invoices and weekly/monthly/yearly reports. **Arka** is the configured Vapi requirements assistant.
 
-**Release status:** working local application; Firebase and Supabase backends are implemented. Production activation is pending credentials, approved calling/messaging accounts and hosted workflow verification. No public deployment or paid billing has been enabled. Local synthetic testing is clearly separated from live data.
+**Release status (5 November 2026):** a Vercel production deployment is available at https://solar-sales-desk.vercel.app and currently requires Vercel authentication. It serves the landing page and clearly labeled local-preview workflow; live business authentication and persistence are disabled because Firebase server credentials and a hosted API origin are missing. WhatsApp, calling and invoice email remain disabled. Do not invite customers or enter business data until the live release gate below is complete. The GitHub repository is current through commit `af720f6`; automatic Vercel Git deployments are not connected.
 
 ## Sales workflow
 
@@ -28,7 +28,7 @@ npm run build
 npx wrangler deploy --dry-run
 ```
 
-The latest full suite passed **73 automated tests**; database isolation checks, production build and Worker dry bundle are documented in [test results](docs/TEST-RESULTS.md). Local protocol fixtures do not certify a real provider connection.
+The current full suite passes **81 automated tests**. Database isolation checks and a production build pass; the Worker dry bundle was also verified. Local protocol fixtures do not certify a real provider connection. `npm audit` reports zero known vulnerabilities after the November 2026 dependency patch.
 
 ## Live configuration
 

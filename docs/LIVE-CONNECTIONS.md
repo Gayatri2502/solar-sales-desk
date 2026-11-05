@@ -1,6 +1,6 @@
 # Live activation checklist
 
-Status: source adapters implemented; no production credentials, provider verification, paid billing, public deployment, real WhatsApp messages or calls activated. Local test data is available only through an explicit testing entry. Live businesses begin empty. A successful build is not proof of successful provider delivery.
+Status (5 November 2026): a Vercel production deployment is READY at https://solar-sales-desk.vercel.app, with Vercel Authentication protection enabled. It was deployed from the current GitHub source snapshot; Git-based automatic deployments are not connected. Live authentication/database and outbound providers are not active, so this is a protected landing page/local preview, not a customer-ready live ERP. Local test data is available only through an explicit testing entry. Live businesses begin empty. A successful build is not proof of successful provider delivery.
 
 ## Decisions and non-secret details needed from the operator
 
@@ -50,7 +50,7 @@ Sources: [Vapi calling setup](https://docs.vapi.ai/quickstart/phone), [Vapi pric
 
 ## Connection inspection — 12 October 2026
 
-The accessible Vercel team has no project matching “solar”, no connectors, and no integration configurations. Firebase discovery reports the plugin is not installed/connected. Local `.env`, `.env.local` and `.dev.vars` are absent. No live calling or messaging connection was verified. The operator's authorized test-call recipient is kept privately outside the application bundle and repository; it is not a public business support number.
+At the 12 October 2026 inspection, the Vercel team had no project matching “solar”; a protected project and production deployment have since been created. The app's ignored local `.env.local` and `.dev.vars` files are not deployed as source. Firebase server credentials remain absent. No live calling or messaging connection was verified. The operator's authorized test-call recipient is kept privately outside the application bundle and repository; it is not a public business support number.
 
 Run `npm run check:live` from the application directory after configuration. It prints missing variable names and activation flags, never secret values, and performs no external requests. A passing configuration check still requires the staging release gate above. Vercel access does not grant Firebase, Meta, Vapi, carrier or Cloudflare access.
 
@@ -61,6 +61,10 @@ Firebase plugin authentication is now verified. The operator authorized a dedica
 Firebase project solar-sales-desk-20261012 and web app 1:594920646696:web:742653b802e78d369f2d1d are now created; email/password authentication configuration deployment succeeded. Billing was verified disabled. Database verification found MongoDB-compatible access mode rather than native Firestore; replacing the newly created empty database requires operator permission and is pending. The React/Worker data layer still uses Supabase; Firebase SDK/business transaction migration has not been activated. See CALLING-ACCOUNT-SETUP.md for the separate calling registration handoff.
 
 Correction verified: with operator permission, the empty MongoDB-compatible database was removed. The replacement sales-native database is Enterprise/native Firestore in asia-south1, with firestoreDataAccessMode enabled, MongoDB access disabled, and freeTier true. Closed client rules were successfully deployed (job 1791828084943). Firebase billing remains disabled. The Firebase Auth and Worker/store adapter is implemented, but its live business workflow still needs the dedicated server credential and an authenticated smoke test.
+
+## Vercel hosting status — 5 November 2026
+
+Project `solar-sales-desk` was created in the connected Vercel team with deployment protection enabled. The production deployment is READY at https://solar-sales-desk.vercel.app. `vercel curl` verified that the deployment serves the app shell. It is not publicly accessible without Vercel authentication and is not a live customer ERP. The deployment was uploaded from the GitHub `main` source snapshot; a GitHub-to-Vercel repository connection was intentionally not enabled, so future commits require an explicit deployment. The live release check still reports missing Firebase service-account credentials, WhatsApp credentials/template/number/cost settings, Vapi number/webhook/cost settings, and verified invoice sender credentials; all outbound flags remain disabled. Complete the authenticated live smoke tests and operational/privacy review before lifting deployment protection or onboarding customers.
 
 ## Local connection check — 25 October 2026
 
