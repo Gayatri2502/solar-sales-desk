@@ -98,7 +98,7 @@ export async function loadDemo(): Promise<State> {
 }
 export async function request(path: string, body?: unknown) {
   const session = (await auth?.auth.getSession())?.data.session;
-  const r = await fetch(`${env.VITE_API_URL || ""}/api${path}`, {
+  const r = await fetch(`${(env.VITE_API_URL || "").replace(/\/$/, "")}/api${path}`, {
     method: body ? "POST" : "GET",
     headers: {
       "Content-Type": "application/json",
