@@ -8,17 +8,26 @@ import {
 import { deliverInvoices, type EmailEnv } from "../invoice-delivery";
 export async function firebaseScheduled(
   env: FirebaseEnv & CommunicationEnv & EmailEnv,
+  dispatch = true,
+  maintenance = true,
 ) {
   const store = new FirebaseStore(env),
     db = new FirebaseBridge(store).asDatabase();
-  await finishPendingDeletions(store);
-  await expireExtractionCaches(store);
+  if (maintenance) {
+    await finishPendingDeletions(store);
+    await expireExtractionCaches(store);
+  }
+  if (!dispatch) return;
+  let communicationFailed = false;
   try {
     await runScheduledCommunications(db, env, firebaseMutate);
   } catch {
-    /* Keep invoice delivery independent of calls. */
+    communicationFailed = true;
   }
-  if (env.INVOICE_EMAIL_ENABLED !== "true") return;
+  if (env.INVOICE_EMAIL_ENABLED !== "true") {
+    if (communicationFailed && !maintenance) throw Error("Communications dispatch failed.");
+    return;
+  }
   const registry = await store.get<{ ids: string[] }>(
       "system/dispatch-tenants",
     ),
@@ -37,4 +46,5 @@ export async function firebaseScheduled(
       /* Persisted leases remain for the next run. */
     }
   }
+  if (communicationFailed && !maintenance) throw Error("Communications dispatch failed.");
 }

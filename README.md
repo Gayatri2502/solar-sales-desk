@@ -12,14 +12,16 @@ Editing an approved quote/invoice requires fresh approval. Customer documents om
 
 ## Run locally
 
-Use Node.js 24 and npm.
+Run locally with Node.js 24 or later:
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open the URL printed by Vite. The public landing page appears before account access. For key-free testing, open Log in → Local testing access → synthetic workspace. Live businesses start empty.
+Open the URL printed by Vite. The public landing page appears before account access. For local use, open Log in → Open the local ERP. The workspace starts empty and saves records to a local SQLite database in `.data/solar-sales-desk.local.sqlite`; this file stays on this computer and is not shared with other users. `.data/` is ignored by Git. Live businesses start empty.
+
+The local workspace can exercise manual lead capture, consent tracking, call scheduling, requirement review, catalogue matching, quotations, approvals, follow-ups, orders and invoices. Live calls, WhatsApp, email delivery and shared Firebase data are disabled until the Worker has its Firebase service identity and the providers are configured and verified. Use Settings → Messaging and voice integrations to inspect live status after sign-in.
 
 ```sh
 npm test

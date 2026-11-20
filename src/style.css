@@ -1111,3 +1111,81 @@ input:focus, select:focus, textarea:focus { border-color: #17634b; box-shadow: 0
 .solar-profile-summary dd { margin: 3px 0 0; overflow-wrap: anywhere; font-size: 13px; }
 @media (max-width: 900px) { .lead-overview { grid-template-columns: 1fr; } .lead-kpis { grid-row: auto; } .solar-profile-summary { grid-template-columns: repeat(2, minmax(0,1fr)); } .dashboard-actions-admin { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .lead-overview { padding: 15px; } .lead-kpis { gap: 6px; } .lead-kpis span { padding: 7px 8px; white-space: normal; } .lead-capture > summary, .lead-analytics > summary { padding: 14px 15px; } .lead-capture > summary { align-items: flex-start; flex-wrap: wrap; } .lead-capture > summary small { order: 2; flex-basis: 100%; } .lead-capture form { padding: 15px; } .solar-profile-summary { grid-template-columns: 1fr 1fr; } .dashboard-action-card { align-items: flex-start; flex-direction: column; } .lead-table-filters { align-items: stretch; flex-direction: column; min-width: 100%; } .lead-table-filters select { width: 100%; } .lead-search { width: 100%; } }
+
+/* Monochrome Swiss workspace: hairline grid, strong type, no decorative color. */
+:root {
+  color-scheme: light;
+  --background: #fff;
+  --foreground: #111;
+  --primary: #111;
+  --primary-foreground: #fff;
+  --secondary: #f4f4f4;
+  --muted-foreground: #555;
+  --border: #d8d8d8;
+  --surface-shadow: none;
+}
+html { filter: grayscale(1); }
+body { background: #fff; color: #111; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+.shell { background: #fff; }
+.sidebar { background: #fff; border-color: #d8d8d8; }
+.sidebar nav { gap: 2px; }
+.sidebar nav a { border-radius: 2px; border-left: 2px solid transparent; color: #333; }
+.sidebar nav a[aria-current] { color: #111; background: #f1f1f1; border-left-color: #111; }
+.brand svg, .public-brand svg { color: #111; }
+.brand, .brand span, .brand strong { color: #111; }
+.topbar { background: #fff; border-color: #d8d8d8; }
+.demo-banner { background: #f2f2f2; color: #222; border-color: #d8d8d8; }
+main { max-width: 1680px; }
+.page-heading { margin-bottom: 22px; }
+.page-heading h1 { letter-spacing: -1.4px; }
+.eyebrow { color: #555; }
+.panel, .stats, .dashboard-action-card, .customer-document, .auth-card, .workflow-preview, .public-plan-grid article, .public-feature-grid article {
+  border-radius: 2px;
+  border-color: #d8d8d8;
+  box-shadow: none;
+}
+.stats button { background: #fff; }
+.stats button:hover, .sidebar nav a:hover { background: #f4f4f4; }
+.stats strong { letter-spacing: -1.5px; }
+.dashboard-action-card, .dashboard-report-action { background: #fff; }
+.dashboard-action-card .eyebrow { color: #555; }
+.bar, .pipeline .bar, .pipeline .bar span { border-radius: 0; }
+.pipeline .bar { background: #e5e5e5; }
+.pipeline .bar span { background: #111; }
+.table-scroll { border-top: 1px solid #d8d8d8; }
+table { font-variant-numeric: tabular-nums; }
+th { background: #f4f4f4; color: #333; }
+th, td { border-color: #dedede; }
+td { background: #fff; }
+tbody tr:hover td { background: #f8f8f8; }
+input, textarea, select, .search { border-radius: 2px; border-color: #bcbcbc; background: #fff; color: #111; }
+input:focus, select:focus, textarea:focus { border-color: #111; box-shadow: 0 0 0 2px #111; outline: 0; }
+input[type="checkbox"] { accent-color: #111; }
+:focus-visible { outline: 2px solid #111; outline-offset: 2px; }
+button[data-slot="button"], .public-primary { border-radius: 2px; box-shadow: none; transition: background-color 120ms ease; }
+button[data-slot="button"]:not(:disabled):hover, .public-primary:hover { box-shadow: none; transform: none; }
+button[data-slot="button"][data-variant="outline"] { border-color: #111; color: #111; background: #fff; }
+.tag, [data-slot="badge"] { border-radius: 2px; }
+.lead-kpis span { background: #f5f5f5; border-color: #ddd; color: #333; border-radius: 2px; }
+.lead-kpis strong { color: #111; }
+.lead-capture > summary::after, .lead-analytics > summary::after { border-radius: 2px; color: #111; border-color: #aaa; }
+.lead-requirements { background: #fafafa; border-color: #ddd; border-radius: 2px; }
+.solar-profile-summary > div { background: #f7f7f7; border-color: #ddd; border-radius: 2px; }
+.solar-profile-summary dt { color: #555; }
+.notice { background: #f5f5f5; border-left-color: #111; }
+.warning, .overdue { color: #222; }
+.public-site { background: #fff; color: #111; }
+.public-header { background: #fff; border-color: #d8d8d8; }
+.public-brand, .public-hero h1 { color: #111; }
+.public-primary { background: #111; color: #fff; }
+.public-primary:hover { background: #333; color: #fff; }
+.workflow-preview { background: #f7f7f7; }
+.public-tinted { background: #f2f2f2; }
+.public-feature-grid svg, .public-plan-grid li svg, .public-steps li:before { color: #111; }
+.lead-overview { border-top: 2px solid #111; }
+footer { border-color: #d8d8d8; color: #555; }
+@media (max-width: 700px) {
+  .sidebar { box-shadow: none; border-bottom: 1px solid #d8d8d8; }
+  .sidebar nav a { border-radius: 2px; }
+  .panel { padding: 16px; }
+}

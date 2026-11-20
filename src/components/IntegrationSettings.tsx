@@ -83,7 +83,7 @@ export default function IntegrationSettings({
           <td>
             {live
               ? `Authenticated Worker access (${import.meta.env.VITE_AUTH_PROVIDER === "firebase" ? "Firebase configuration" : "Supabase configuration"})`
-              : "Local test data; live database is not connected"}
+              : "Local SQLite workspace; not connected to shared Firebase"}
           </td>
         </tr>
         <tr>

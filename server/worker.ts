@@ -23,6 +23,7 @@ import { emptyState } from "../src/seed";
 import { extract, costMicros, type AIConfig } from "./provider";
 export type Env = FirebaseEnv & { DATABASE_PROVIDER?: string; MAINTENANCE_MODE?: string } & EmailEnv &
   CommunicationEnv & {
+    N8N_DISPATCH_SECRET?: string;
     SUPABASE_URL: string;
     SUPABASE_SERVICE_ROLE_KEY: string;
     ALLOWED_ORIGIN: string;
@@ -127,7 +128,7 @@ export default {
   async scheduled(_controller: unknown, env: Env) {
     if(env.MAINTENANCE_MODE==='true')return;
     if (env.DATABASE_PROVIDER === "firebase") {
-      await firebaseScheduled(env);
+      await firebaseScheduled(env, (env.N8N_DISPATCH_SECRET?.length ?? 0) < 32);
       return;
     }
     if (
@@ -170,6 +171,26 @@ export default {
     const path = new URL(req.url).pathname;
     if (req.method !== "GET" && req.method !== "POST")
       return json({ error: "Method not allowed." }, 405, origin);
+    if (path === "/api/automation/dispatch" && req.method === "POST") {
+      const secret = env.N8N_DISPATCH_SECRET;
+      if (env.DATABASE_PROVIDER !== "firebase" || !secret || secret.length < 32)
+        return json({ error: "Automation is unavailable." }, 503, origin);
+      const encoder = new TextEncoder();
+      const digest = (value: string) =>
+        crypto.subtle.digest("SHA-256", encoder.encode(value));
+      const expected = new Uint8Array(await digest("Bearer " + secret));
+      const actual = new Uint8Array(await digest(req.headers.get("Authorization") || ""));
+      let difference = 0;
+      for (let i = 0; i < expected.length; i++) difference |= expected[i] ^ actual[i];
+      if (difference !== 0)
+        return json({ error: "Authentication required." }, 401, origin);
+      try {
+        await firebaseScheduled(env, true, false);
+        return json({ ok: true }, 200, origin);
+      } catch {
+        return json({ error: "Dispatch run failed." }, 503, origin);
+      }
+    }
     if (env.DATABASE_PROVIDER === "firebase") {
       const result = await firebaseAPI(req, env, body, rawBody);
       return result instanceof Response

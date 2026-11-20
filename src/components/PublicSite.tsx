@@ -419,6 +419,10 @@ function AuthPage({
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState(""),
     [error, setError] = useState("");
+  const [useResetLink, setUseResetLink] = useState(false);
+  const [resetLink, setResetLink] = useState("");
+  const firebaseReset = reset && auth && "confirmResetLink" in auth.auth ? auth.auth.confirmResetLink : null;
+  const completingReset = useResetLink && !!firebaseReset;
   const configured = live && !!auth;
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -430,7 +434,13 @@ function AuthPage({
         throw Error(
           "Account access is not configured on this installation. The operator must connect authentication before signup or login is available.",
         );
-      if (recovery) {
+      if (completingReset) {
+        await firebaseReset(resetLink, password);
+        setResetLink("");
+        setPassword("");
+        setUseResetLink(false);
+        setMessage("Password updated. Log in with your new password.");
+      } else if (recovery) {
         const r = await auth!.auth.updateUser({ password });
         if (r.error)
           throw Error(
@@ -439,7 +449,7 @@ function AuthPage({
         await auth!.auth.signOut();
         setMessage("Password updated. Log in with your new password.");
       } else if (reset) {
-        const r = await auth!.auth.resetPasswordForEmail(email, {
+        const r = await auth!.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: location.origin + "/#login",
         });
         if (r.error) throw r.error;
@@ -464,11 +474,19 @@ function AuthPage({
           );
         }
       } else {
-        const r = await auth!.auth.signInWithPassword({ email, password });
-        if (r.error)
-          throw Error(
-            "Login failed. Check your email, password and email confirmation.",
-          );
+        const r = await auth!.auth.signInWithPassword({ email: email.trim(), password });
+        if (r.error) {
+          const code = "code" in r.error ? r.error.code : undefined;
+          if (r.error.message === "Confirm your email before signing in." || code === "email_not_confirmed")
+            throw Error("Confirm your email using the signup link, then log in again.");
+          if (code === "auth/network-request-failed")
+            throw Error("Could not reach the sign-in service. Check your connection and try again.");
+          if (code === "auth/too-many-requests" || code === "over_request_rate_limit")
+            throw Error("Too many sign-in attempts. Wait a few minutes before trying again.");
+          if (code === "auth/operation-not-allowed" || code === "auth/invalid-api-key")
+            throw Error("Email sign-in is unavailable. Contact your SolarDesk administrator.");
+          throw Error("Email or password is incorrect. Use Forgot your password? to regain access.");
+        }
         location.hash = "Dashboard";
       }
     } catch (e) {
@@ -521,7 +539,7 @@ function AuthPage({
                 />
               </label>
             )}
-            {!recovery && (
+            {!recovery && !completingReset && (
               <label>
                 Email address
                 <input
@@ -534,16 +552,23 @@ function AuthPage({
                 />
               </label>
             )}
-            {!reset && (
+            {completingReset && (
+              <label>
+                Link from your recovery email
+                <input required type="url" autoComplete="off" value={resetLink}
+                  onChange={(e) => setResetLink(e.target.value)} />
+              </label>
+            )}
+            {(!reset || completingReset) && (
               <label>
                 Password
                 <input
                   required
                   type="password"
-                  minLength={signup || recovery ? 12 : 1}
+                  minLength={signup || recovery || completingReset ? 12 : 1}
                   maxLength={100}
                   autoComplete={
-                    signup || recovery ? "new-password" : "current-password"
+                    signup || recovery || completingReset ? "new-password" : "current-password"
                   }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -563,7 +588,7 @@ function AuthPage({
             <Button disabled={busy}>
               {busy
                 ? "Please wait…"
-                : recovery
+                : recovery || completingReset
                   ? "Save new password"
                   : reset
                     ? "Send recovery email"
@@ -572,6 +597,17 @@ function AuthPage({
                       : "Log in"}
             </Button>
           </form>
+          {firebaseReset && (
+            <button type="button" disabled={busy} onClick={() => {
+              setUseResetLink(!useResetLink);
+              setResetLink("");
+              setPassword("");
+              setError("");
+              setMessage("");
+            }}>
+              {completingReset ? "Request a reset email" : "Use a link from my recovery email"}
+            </button>
+          )}
           <p>
             {signup ? "Already have an account?" : "New to Solar Sales Desk?"}{" "}
             <a href={signup ? "#login" : "#signup"}>
@@ -592,7 +628,7 @@ function AuthPage({
               <p>
                 {live
                   ? "Live account access is unavailable. Contact your operator to complete authentication setup."
-                  : "Open an empty local preview workspace. Records stay in this browser; account signup, live database, AI calling and customer messaging are not connected."}
+                  : "Open a local workspace backed by a local database. Records stay on this device and do not sync to a team. Calling and customer messaging are disabled until their providers are configured."}
               </p>
               {!live && <Button onClick={onSandbox}>
                 Open local preview

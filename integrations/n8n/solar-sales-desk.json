@@ -1,0 +1,86 @@
+{
+  "name": "SolarDesk | Dispatch eligible sales work",
+  "nodes": [
+    {
+      "name": "Check due work every 5 minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "id": "ae8c12bb-ff81-498e-add1-c9520e6fa715",
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "id": "cd093d30-0da1-4831-bf9c-bb335a4caa71",
+      "position": [
+        0,
+        180
+      ],
+      "parameters": {}
+    },
+    {
+      "name": "Dispatch SolarDesk queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "id": "66bf7405-a086-47a7-add5-772d72be1bba",
+      "position": [
+        280,
+        80
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR-SOLARDESK-API.example/api/automation/dispatch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 120000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Check due work every 5 minutes": {
+      "main": [
+        [
+          {
+            "node": "Dispatch SolarDesk queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Dispatch SolarDesk queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none"
+  }
+}

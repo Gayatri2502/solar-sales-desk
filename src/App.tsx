@@ -47,6 +47,7 @@ import {
   demoVisible,
   resetDemo,
   type Session,
+  type IntegrationStatus,
 } from "./api";
 import { emptyState } from "./seed";
 import { previewCSV, customerCSV, download, type Preview } from "./csv";
@@ -100,14 +101,13 @@ function hashPage() {
   }
 }
 export default function App() {
-  const [raw, setRaw] = useState<State>(() =>
-    live ? emptyState() : loadDemo(),
-  );
+  const [raw, setRaw] = useState<State>(() => emptyState());
   const [page, setPage] = useState(hashPage);
   const [role, setRole] = useState<"admin" | "sales">("admin");
   const [actorId, setActorId] = useState("demo-admin");
   const [session, setSession] = useState<Session | null>(null);
-  const [ready, setReady] = useState(!live);
+  const [integrations, setIntegrations] = useState<IntegrationStatus | null>(null);
+  const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState("");
@@ -119,6 +119,28 @@ export default function App() {
   const [listFilter, setListFilter] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  useEffect(() => {
+    if (live) return;
+    let active = true;
+    loadDemo()
+      .then((saved) => {
+        if (active) setRaw(saved);
+      })
+      .catch((error: unknown) => {
+        if (active)
+          setNotice(
+            error instanceof Error
+              ? error.message
+              : "Could not open this browser's local database.",
+          );
+      })
+      .finally(() => {
+        if (active) setReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   useEffect(() => {
     if (!auth) return;
     const { data } = auth.auth.onAuthStateChange((_e, s) => {
@@ -139,7 +161,14 @@ export default function App() {
             setNotice(e.message);
             if (e.message.includes("membership")) setNeedsOnboarding(true);
           });
-      else setReady(false);
+      if (s)
+        request("/integrations")
+          .then((status) => setIntegrations(status))
+          .catch(() => setIntegrations(null));
+      else {
+        setIntegrations(null);
+        setReady(false);
+      }
     });
     return () => data.subscription.unsubscribe();
   }, []);
@@ -175,6 +204,14 @@ export default function App() {
     setSelectedEnquiry(null);
     setSelectedQuote(null);
   }
+  if (!ready && !live)
+    return (
+      <main className="login" role="status">
+        <Sun aria-hidden />
+        <h1>Solar Sales Desk</h1>
+        <p>Opening your local workspace…</p>
+      </main>
+    );
   if (live && session && needsOnboarding)
     return (
       <main className="login">
@@ -335,7 +372,7 @@ export default function App() {
           <span className="avatar">{admin ? "PA" : "RS"}</span>
           <div>
             <strong>{admin ? "Business admin" : "Sales representative"}</strong>
-            <small>{live ? session?.user.email : "Local preview"}</small>
+            <small>{live ? session?.user.email : "Local workspace"}</small>
           </div>
         </div>
       </aside>
@@ -373,8 +410,7 @@ export default function App() {
           <div className="demo-banner">
             <strong>Local preview</strong>
             <span>
-              Preview records are saved in this browser. AI, calling, messaging,
-              email delivery and the live database are not connected.
+              Local database · records stay on this computer and do not sync to a team. AI, calls, WhatsApp and email need verified provider setup.
             </span>
           </div>
         ) : null}
@@ -446,6 +482,8 @@ export default function App() {
             <Leads
               state={state}
               run={run}
+              voiceReady={!!integrations?.voice.configured && !!integrations.voice.enabled}
+              whatsappReady={!!integrations?.whatsapp.configured && !!integrations.whatsapp.enabled}
               onEnquiry={(id) => {
                 navigate("Enquiries");
                 setSelectedEnquiry(id);
@@ -460,7 +498,7 @@ export default function App() {
               value={value}
               won={won}
               admin={admin}
-              callingConfigured={live}
+              callingConfigured={!!integrations?.voice.configured && !!integrations.voice.enabled}
               onEnquiry={(id) => {
                 navigate("Enquiries");
                 setSelectedEnquiry(id);
@@ -718,7 +756,14 @@ export default function App() {
               state={state}
               admin={admin}
               run={run}
-              onReset={() => setRaw(resetDemo())}
+              onReset={async () => {
+                try {
+                  setRaw(await resetDemo());
+                  setNotice("This browser's local workspace was cleared.");
+                } catch (error) {
+                  setNotice(error instanceof Error ? error.message : "Could not clear the local workspace.");
+                }
+              }}
             />
           ) : null}
         </main>
@@ -726,7 +771,7 @@ export default function App() {
           Solar Sales Desk{" "}
           <span>
             Approved invoice email · Configurable taxes ·{" "}
-            {live ? "Live workspace" : "Local preview · external actions disabled"}
+            {live ? "Live workspace" : "Local database · external actions disabled"}
           </span>
         </footer>
       </div>

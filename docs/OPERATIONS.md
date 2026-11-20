@@ -1,7 +1,7 @@
 # Live setup, deployment, backups and deletion
 
 ## Required configuration
-Demo is fully separate: `VITE_MODE=demo` uses browser-local synthetic storage only. Live mode never reads this storage. Do not migrate synthetic data into customer workspaces.
+Local mode is fully separate: the Vite development server keeps its empty demo workspace in the ignored `.data/solar-sales-desk.local.sqlite` SQLite file. Static demo builds use browser IndexedDB, with a one-time migration from the earlier local preview key. Local records do not sync to a team. Live mode never reads this local data. Do not migrate local preview records into customer workspaces.
 
 1. Create **one** Supabase project for all businesses, only after deployment approval. Choose a suitable region and review the current terms/data-processing agreement with the business. Apply all migrations in filename order: `supabase/migrations/001_initial.sql`, then `002_admin_reports.sql`, then `003_invoices.sql` in the SQL editor or with your migration runner.
 2. Disable public signup in Supabase Auth. Operator creates the first business owner using email/password through the Supabase admin dashboard, confirms their email, and shares credentials using an approved secure channel. No SMS, paid email or email invitation is required. Supabase's default email server only sends to project team addresses and is unsuitable for production account recovery; this pilot uses admin-managed password reset and user-initiated authenticated password change. Agree that support workflow before onboarding.

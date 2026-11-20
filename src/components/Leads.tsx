@@ -7,8 +7,8 @@ import { FieldInput, Table, Tag, type Run } from "./shared";
 import { BarGraph } from "./ReportGraphs";
 import { Search } from "lucide-react";
 
-type Props = { state: State; run: Run; onEnquiry: (id: string) => void };
-export default function Leads({ state, run, onEnquiry }: Props) {
+type Props = { state: State; run: Run; onEnquiry: (id: string) => void; voiceReady: boolean; whatsappReady: boolean };
+export default function Leads({ state, run, onEnquiry, voiceReady, whatsappReady }: Props) {
   const [selected, setSelected] = useState("");
   const [company, setCompany] = useState("");
   const [contact, setContact] = useState("");
@@ -40,6 +40,7 @@ export default function Leads({ state, run, onEnquiry }: Props) {
         <div>
           <h2>Lead work queue</h2>
           <p className="muted">Capture customer requirements, review agreed callbacks, and move qualified opportunities into enquiries.</p>
+          <p className="lead-status-note" role="status">{live ? `Calling ${voiceReady ? "enabled" : "not configured or disabled"} · WhatsApp ${whatsappReady ? "enabled" : "not configured or disabled"}` : "Calling and WhatsApp are disabled in the local workspace."}</p>
         </div>
         <div className="lead-kpis" aria-label="Lead activity summary">
           <span><strong>{leads.length}</strong> contacts</span>
@@ -180,7 +181,7 @@ export default function Leads({ state, run, onEnquiry }: Props) {
               <td>
                 <div className="toolbar">
                   <Button variant="outline" onClick={() => setSelected(l.id)}>Review lead</Button>
-                  {live ? <Button disabled={l.status!=="Scheduled" || !l.callConsent || Date.parse(l.scheduledAt)>Date.now()} onClick={() => run({type:"contact.voice",id:l.id})}>Trigger agreed call</Button> : <Button variant="outline" disabled title="Connect and verify a calling provider to enable calls">Calling unavailable</Button>}
+                  {live ? <Button disabled={!voiceReady || l.status!=="Scheduled" || !l.callConsent || Date.parse(l.scheduledAt)>Date.now()} onClick={() => run({type:"contact.voice",id:l.id})}>{voiceReady ? "Trigger agreed call" : "Calling unavailable"}</Button> : <Button variant="outline" disabled title="Connect and verify a calling provider to enable calls">Calling unavailable</Button>}
                 </div>
               </td>
             </tr>
@@ -203,6 +204,8 @@ export default function Leads({ state, run, onEnquiry }: Props) {
           lead={lead}
           state={state}
           run={run}
+          voiceReady={voiceReady}
+          whatsappReady={whatsappReady}
           onEnquiry={onEnquiry}
         />
       ) : null}
@@ -225,6 +228,7 @@ function LeadDetail({
   state,
   run,
   onEnquiry,
+  whatsappReady,
 }: { lead: Lead } & Props) {
   const [response, setResponse] = useState("Products");
   const [evidence, setEvidence] = useState("");
@@ -280,7 +284,8 @@ function LeadDetail({
               <small>Record only consent the customer actually gave. This does not send a message.</small>
             </div>
           ) : null}
-          {live&&<Button variant="outline" disabled={!l.whatsappConsent||!l.whatsapp} onClick={()=>run({type:"contact.whatsapp",id:l.id})}>Send approved WhatsApp qualification template</Button>}
+        {live&&<Button variant="outline" disabled={!whatsappReady||!l.whatsappConsent||!l.whatsapp} onClick={()=>run({type:"contact.whatsapp",id:l.id})}>Send approved WhatsApp qualification template</Button>}
+        {live&&!whatsappReady?<p className="muted">WhatsApp sending is unavailable until the business connection is configured and enabled.</p>:null}
           <p>
             Prepared WhatsApp text — review and send deliberately using your
             approved channel. This app has not sent it.

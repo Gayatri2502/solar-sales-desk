@@ -58,7 +58,7 @@ export class FirebaseStore {
   private cached?: { token: string; until: number };
   constructor(
     private env: FirebaseEnv,
-    private transport: typeof fetch = fetch,
+    private transport: typeof fetch = (input, init) => fetch(input, init),
   ) {
     z.string()
       .regex(/^[a-z][a-z0-9-]{5,29}$/)

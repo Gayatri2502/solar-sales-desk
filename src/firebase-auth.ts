@@ -7,6 +7,7 @@ import {
   onIdTokenChanged,
   sendEmailVerification,
   sendPasswordResetEmail,
+  confirmPasswordReset,
   updatePassword,
   updateProfile,
   reload,
@@ -103,6 +104,30 @@ export function firebaseAuth(config: {
       },
       signOut: async () => {
         await signOut(a);
+      },
+      confirmResetLink: async (link: string, password: string) => {
+        let code: string | null;
+        try {
+          const url = new URL(link.trim());
+          if (url.protocol !== "https:" || url.hostname !== config.authDomain ||
+              url.pathname !== "/__/auth/action" || url.searchParams.get("mode") !== "resetPassword")
+            throw Error();
+          code = url.searchParams.get("oobCode");
+          if (!code) throw Error();
+        } catch {
+          throw Error("Paste the full password reset link from your SolarDesk email.");
+        }
+        try {
+          await confirmPasswordReset(a, code, password);
+        } catch (e) {
+          if (e instanceof Error && "code" in e) {
+            if (e.code === "auth/weak-password")
+              throw Error("Choose a stronger password and try again.");
+            if (e.code === "auth/network-request-failed")
+              throw Error("Could not reach Firebase. Check your connection and try again.");
+          }
+          throw Error("Password reset failed. Request a fresh link and try again.");
+        }
       },
       resetPasswordForEmail: async (email: string, _options?: unknown) => {
         try {
