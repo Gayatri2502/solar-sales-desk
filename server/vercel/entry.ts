@@ -1,4 +1,4 @@
-import worker, { type Env } from "../server/worker";
+import worker, { type Env } from "../worker";
 
 const productionOrigin =
   "https://solar-sales-desk-alphacentauricai-8714s-projects.vercel.app";
